@@ -14,11 +14,14 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 from security import IdentityStore, PERMISSIONS, digest, password_hash, password_ok
 from telemetry import REQUIRED_SERVICES, solar_status
+from account_api import ProfileInput, profile
 
 
 class Login(BaseModel):
     username: str = Field(min_length=1, max_length=80)
     password: str = Field(min_length=1, max_length=256)
+
+    code: str = Field(default="", max_length=80)
 
 
 class RoleInput(BaseModel):
@@ -26,7 +29,7 @@ class RoleInput(BaseModel):
     permissions: list[str]
 
 
-class UserInput(BaseModel):
+class UserInput(ProfileInput):
     id: int | None = None
     username: str = Field(pattern=r"^[A-Za-z0-9_.@-]{1,80}$")
     password: str | None = Field(default=None, min_length=8, max_length=256)
@@ -62,9 +65,6 @@ class ConfigInput(BaseModel):
     critical_seconds: int = Field(ge=2, le=31536000)
     warning_drops: int = Field(default=1, ge=1)
     critical_drops: int = Field(default=10, ge=2)
-    location: str = Field(min_length=1, max_length=80)
-    latitude: float = Field(ge=-90, le=90, allow_inf_nan=False)
-    longitude: float = Field(ge=-180, le=180, allow_inf_nan=False)
 
     @field_validator("services")
     @classmethod
@@ -189,7 +189,7 @@ def install(app, backend):
             "version": user["version"],
             "config_version": backend.monitor.get_settings()["version"],
             "settings": {
-                **{k: c[k] for k in ("location", "latitude", "longitude")},
+                **user["location"],
                 "clocks": (
                     user["clocks"]
                     if "clocks.view" in user["permissions"]
@@ -237,6 +237,7 @@ def install(app, backend):
             body.username,
             body.password,
             request.client.host if request.client else "unknown",
+            body.code,
         )
         token = secrets.token_urlsafe(32)
         with backend.monitor.connect() as db:
@@ -346,6 +347,7 @@ def install(app, backend):
                     "username": r[1],
                     "roles": json.loads(r[2]),
                     "enabled": bool(r[3]),
+                    **profile(db, r[0]),
                 }
                 for r in db.execute("SELECT id,username,roles,enabled FROM users")
             ]
@@ -422,6 +424,26 @@ def install(app, backend):
                     )
                     db.execute("DELETE FROM sessions WHERE user_id=?", (body.id,))
                     db.execute("DELETE FROM api_keys WHERE user_id=?", (body.id,))
+            user_id = (
+                body.id
+                or db.execute(
+                    "SELECT id FROM users WHERE username=?", (body.username,)
+                ).fetchone()[0]
+            )
+            db.execute(
+                "UPDATE users SET name=?,email=?,photo=? WHERE id=?",
+                (body.name, body.email, body.photo, user_id),
+            )
+            if body.id is None:
+                db.execute(
+                    "UPDATE users SET location=? WHERE id=?",
+                    (
+                        json.dumps(
+                            dict(location="London", latitude=51.5074, longitude=-0.1278)
+                        ),
+                        user_id,
+                    ),
+                )
             store().keep_admin(db)
         return {"success": True}
 
@@ -447,11 +469,11 @@ def install(app, backend):
 
     @app.get("/dashboard/settings", include_in_schema=False)
     def settings(request: Request):
-        return clock_settings(who(request, "dashboard.view"))
+        return clock_settings(who(request))
 
     @app.patch("/dashboard/settings", include_in_schema=False)
     def save_preferences(request: Request, body: Preferences):
-        user = who(request, "dashboard.view", "clocks.amend")
+        user = who(request, "clocks.amend")
         store().mutation(request)
         clocks = []
         for c in body.clocks:
@@ -470,8 +492,7 @@ def install(app, backend):
 
     @app.get("/dashboard/solar", include_in_schema=False)
     def solar(request: Request):
-        who(request, "dashboard.view")
-        c = config()
+        c = who(request)["location"]
         return solar_status(latitude=c["latitude"], longitude=c["longitude"])
 
     @app.get("/dashboard/time", include_in_schema=False)

@@ -1,6 +1,6 @@
 """SQLite identities and request-time role enforcement for TimeBeacon."""
 
-import base64
+import os
 import hashlib
 import hmac
 import json
@@ -68,6 +68,33 @@ CREATE TABLE IF NOT EXISTS api_keys(id INTEGER PRIMARY KEY,user_id INTEGER NOT N
 CREATE TABLE IF NOT EXISTS login_attempts(address TEXT NOT NULL,stamp INTEGER NOT NULL);"""
             )
             db.execute("BEGIN IMMEDIATE")
+            columns = {r[1] for r in db.execute("PRAGMA table_info(users)")}
+            for name, definition in {
+                "name": "TEXT NOT NULL DEFAULT ''",
+                "email": "TEXT NOT NULL DEFAULT ''",
+                "photo": "TEXT NOT NULL DEFAULT ''",
+                "location": "TEXT NOT NULL DEFAULT '{}'",
+                "totp": "TEXT NOT NULL DEFAULT ''",
+                "totp_pending": "TEXT NOT NULL DEFAULT ''",
+                "totp_pending_until": "INTEGER NOT NULL DEFAULT 0",
+                "totp_last": "INTEGER NOT NULL DEFAULT -1",
+                "recovery": "TEXT NOT NULL DEFAULT '[]'",
+            }.items():
+                if name not in columns:
+                    db.execute(f"ALTER TABLE users ADD COLUMN {name} {definition}")
+            # Keep key creation inside the migration lock for multiple workers.
+            from cryptography.fernet import Fernet
+
+            key_path = self.monitor.database.with_name("identity.key")
+            if not key_path.exists():
+                if db.execute("SELECT 1 FROM users WHERE totp!='' LIMIT 1").fetchone():
+                    raise RuntimeError(
+                        "Restore identity.key from backup before starting TimeBeacon"
+                    )
+                with os.fdopen(
+                    os.open(key_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), "wb"
+                ) as key:
+                    key.write(Fernet.generate_key())
             db.execute(
                 "INSERT OR IGNORE INTO roles VALUES (?,?)",
                 ("Administrator", json.dumps(list(PERMISSIONS))),
@@ -91,6 +118,18 @@ CREATE TABLE IF NOT EXISTS login_attempts(address TEXT NOT NULL,stamp INTEGER NO
                 "SELECT payload FROM settings WHERE id=1"
             ).fetchone()
             settings = json.loads(settings_row[0])
+            location = {
+                k: settings.get(k, v)
+                for k, v in {
+                    "location": "London",
+                    "latitude": 51.5074,
+                    "longitude": -0.1278,
+                }.items()
+            }
+            db.execute(
+                "UPDATE users SET location=? WHERE location='{}'",
+                (json.dumps(location),),
+            )
             if "clocks" in settings:
                 settings.pop("clocks")
                 db.execute(
@@ -120,11 +159,17 @@ CREATE TABLE IF NOT EXISTS login_attempts(address TEXT NOT NULL,stamp INTEGER NO
             "permissions": sorted(permissions),
             "clocks": json.loads(row[4]),
             "version": row[5],
+            "location": json.loads(
+                db.execute(
+                    "SELECT location FROM users WHERE id=?", (user_id,)
+                ).fetchone()[0]
+            ),
         }
 
-    def credential(self, username, password, address):
+    def credential(self, username, password, address, code=""):
         now = int(time.time())
         with self.monitor.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
             db.execute("DELETE FROM login_attempts WHERE stamp<?", (now - 300,))
             if (
                 db.execute(
@@ -137,6 +182,7 @@ CREATE TABLE IF NOT EXISTS login_attempts(address TEXT NOT NULL,stamp INTEGER NO
                 )
             db.execute("INSERT INTO login_attempts VALUES (?,?)", (address, now))
         with self.monitor.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
             row = db.execute(
                 "SELECT id,password FROM users WHERE username=?", (username,)
             ).fetchone()
@@ -144,6 +190,7 @@ CREATE TABLE IF NOT EXISTS login_attempts(address TEXT NOT NULL,stamp INTEGER NO
             if not row or not valid:
                 raise HTTPException(401, "Invalid credentials")
             user = self.identity(db, row[0])
+            self.verify_second_factor(db, user["id"], code)
             db.execute("DELETE FROM login_attempts WHERE address=?", (address,))
             return user
 
@@ -151,17 +198,7 @@ CREATE TABLE IF NOT EXISTS login_attempts(address TEXT NOT NULL,stamp INTEGER NO
         authorization = request.headers.get("authorization", "")
         user = None
         if authorization.startswith("Basic "):
-            try:
-                username, password = (
-                    base64.b64decode(authorization[6:], validate=True)
-                    .decode()
-                    .split(":", 1)
-                )
-            except Exception:
-                raise HTTPException(401, "Invalid credentials")
-            user = self.credential(
-                username, password, request.client.host if request.client else "unknown"
-            )
+            raise HTTPException(401, "Use the sign-in form or a personal API key")
         elif authorization.startswith("Bearer "):
             with self.monitor.connect() as db:
                 row = db.execute(
@@ -170,6 +207,8 @@ CREATE TABLE IF NOT EXISTS login_attempts(address TEXT NOT NULL,stamp INTEGER NO
                 ).fetchone()
                 if row:
                     user = self.identity(db, row[0])
+        elif authorization:
+            raise HTTPException(401, "Unsupported authentication method")
         else:
             with self.monitor.connect() as db:
                 row = db.execute(
@@ -185,11 +224,40 @@ CREATE TABLE IF NOT EXISTS login_attempts(address TEXT NOT NULL,stamp INTEGER NO
             raise HTTPException(
                 401,
                 "Authentication required",
-                headers={"WWW-Authenticate": 'Basic realm="TimeBeacon"'} if api else {},
+                headers={},
             )
         if api or authorization:
             self.require(user, "api.view")
         return user
+
+    def cipher(self):
+        from cryptography.fernet import Fernet
+
+        return Fernet(self.monitor.database.with_name("identity.key").read_bytes())
+
+    def verify_second_factor(self, db, user_id, code):
+        import pyotp
+
+        secret, last, recovery = db.execute(
+            "SELECT totp,totp_last,recovery FROM users WHERE id=?", (user_id,)
+        ).fetchone()
+        if not secret:
+            return
+        counter = int(time.time()) // 30
+        totp = pyotp.TOTP(self.cipher().decrypt(secret.encode()).decode())
+        for step in (counter - 1, counter, counter + 1):
+            if step > last and hmac.compare_digest(totp.at(step * 30), code):
+                db.execute("UPDATE users SET totp_last=? WHERE id=?", (step, user_id))
+                return
+        codes = json.loads(recovery)
+        hashed = digest(code.replace(" ", "").lower())
+        if hashed in codes:
+            codes.remove(hashed)
+            db.execute(
+                "UPDATE users SET recovery=? WHERE id=?", (json.dumps(codes), user_id)
+            )
+            return
+        raise HTTPException(401, "Enter a valid authenticator or unused recovery code")
 
     @staticmethod
     def require(user, *permissions):

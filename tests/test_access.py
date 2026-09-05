@@ -138,7 +138,7 @@ def test_bootstrap_and_permission_boundaries(system):
     assert "private-client" not in c.get("/dashboard/history?metric=cpu").text
     assert (
         c.get(
-            "/time/clients/details", headers=basic("viewer", "viewer-password")
+            "/time/clients/details"
         ).status_code
         == 403
     )
@@ -230,7 +230,8 @@ def test_roles_keys_and_per_user_clocks(system):
 
 def test_api_contracts_history_and_csrf(system):
     m, c = system
-    h = basic()
+    login(c)
+    h = {}
     for url in [
         "/health/details",
         "/server/status",
@@ -408,4 +409,5 @@ def test_password_change_and_attempt_limit(system):
 def test_session_probe_does_not_trigger_browser_basic_prompt(system):
     _,client=system
     assert "www-authenticate" not in client.get("/auth/me").headers
-    assert "www-authenticate" in client.get("/server/status").headers
+    assert "www-authenticate" not in client.get("/server/status").headers
+    assert client.get("/server/status", headers=basic()).status_code == 401

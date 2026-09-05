@@ -300,7 +300,7 @@ function renderClient(client) {
         );
 
     card.className =
-        `client-card${
+        `ui segment client-card${
             open
                 ? " open"
                 : ""
@@ -835,7 +835,7 @@ function buildClocks() {
                     );
 
                 card.className =
-                    "clock-card";
+                    "ui segment clock-card";
 
                 card.innerHTML = `
                     <div class="clock-city">

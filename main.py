@@ -34,7 +34,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 # ---------------------------------------------------------------------------
 
 BASE_DIR = Path(__file__).resolve().parent
-ASSET_VERSION = hashlib.sha256(b"".join((BASE_DIR / name).read_bytes() for name in ("static/app.js", "static/dashboard.js", "static/app.css", "static/access.js"))).hexdigest()[:12]
+ASSET_VERSION = hashlib.sha256(b"".join((BASE_DIR / name).read_bytes() for name in ("static/app.js", "static/dashboard.js", "static/app.css", "static/access.js", "static/theme.css", "static/pages.js"))).hexdigest()[:12]
 
 CHRONYC = "/usr/bin/chronyc"
 
@@ -534,6 +534,13 @@ async def dashboard(
     request: Request,
 ):
 
+    from security import IdentityStore
+    from fastapi.responses import RedirectResponse
+    try:
+        user = IdentityStore(monitor).authenticate(request)
+    except HTTPException:
+        return RedirectResponse('/login', status_code=303)
+    IdentityStore.require(user, 'dashboard.view')
     return templates.TemplateResponse(
         request=request,
         name="index.html",
@@ -557,11 +564,11 @@ install(app,sys.modules[__name__])
 from fastapi.openapi.utils import get_openapi
 def secured_openapi():
     if app.openapi_schema:return app.openapi_schema
-    schema=get_openapi(title="TimeBeacon API",version=API_VERSION,description="Role-scoped monitoring API. Authenticate using HTTP Basic user credentials or a Bearer API key created in User Settings. Both require API Access and each endpoint's view permission. History defaults to 60 minutes; from/to accept Unix seconds or ISO 8601 dates with timezone. Page arrays using X-Next-After and the returned X-History-From/To headers. CPU/RAM/disk are percent; offset and RTT values are milliseconds. Only /health is public.",routes=app.routes)
-    schema.setdefault("components",{})["securitySchemes"]={"UserCredentials":{"type":"http","scheme":"basic"},"UserAPIKey":{"type":"http","scheme":"bearer"}}
+    schema=get_openapi(title="TimeBeacon API",version=API_VERSION,description="Role-scoped monitoring API. Authenticate using the sign-in form (session cookie) or a Bearer API key created in User Settings. HTTP Basic is not supported. Both require API Access and each endpoint's view permission. History defaults to 60 minutes; from/to accept Unix seconds or ISO 8601 dates with timezone. Page arrays using X-Next-After and the returned X-History-From/To headers. CPU/RAM/disk are percent; offset and RTT values are milliseconds. Only /health is public.",routes=app.routes)
+    schema.setdefault("components",{})["securitySchemes"]={"UserSession":{"type":"apiKey","in":"cookie","name":"timebeacon_session"},"UserAPIKey":{"type":"http","scheme":"bearer"}}
     for path,operations in schema["paths"].items():
         for operation in operations.values():
-            if path!="/health":operation["security"]=[{"UserCredentials":[]},{"UserAPIKey":[]}]
+            if path!="/health":operation["security"]=[{"UserSession":[]},{"UserAPIKey":[]}]
     app.openapi_schema=schema;return schema
 app.openapi=secured_openapi
 
@@ -579,3 +586,27 @@ async def private_responses(request,call_next):
     if not request.url.path.startswith("/static/"):
         response.headers["Cache-Control"]="no-store"
     return response
+
+from account_api import install as install_accounts
+install_accounts(app, sys.modules[__name__])
+
+@app.get('/login', include_in_schema=False)
+@app.get('/admin', include_in_schema=False)
+@app.get('/admin/users', include_in_schema=False)
+@app.get('/admin/roles', include_in_schema=False)
+@app.get('/admin/services', include_in_schema=False)
+@app.get('/user-settings', include_in_schema=False)
+def account_page(request: Request):
+    from security import IdentityStore
+    from fastapi.responses import RedirectResponse
+    page = request.url.path
+    if page != '/login':
+        try:
+            user = IdentityStore(monitor).authenticate(request)
+        except HTTPException:
+            return RedirectResponse('/login', status_code=303)
+        if page.startswith('/admin'):
+            IdentityStore.require(user, 'admin')
+    return templates.TemplateResponse(request=request, name='account.html', context={
+        'page':page, 'asset_version':ASSET_VERSION, 'dashboard_version':DASHBOARD_VERSION,
+        'api_version':API_VERSION})

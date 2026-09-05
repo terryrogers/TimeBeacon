@@ -1,6 +1,6 @@
-# TimeBeacon API 3.0
+# TimeBeacon API 4.0
 
-Use HTTPS. Authenticate with HTTP Basic credentials or `Authorization: Bearer <your-user-api-key>`. Keys are created and revoked in User Settings, never in Administration on behalf of another user. Both methods require `api.view`, and all requests recheck account enablement and current role permissions. Browser sessions are also accepted for same-origin use with the same API permission checks. POST clock mutations accept JSON; session-cookie requests must include the matching Origin header.
+Use HTTPS. Authenticate with `Authorization: Bearer <your-user-api-key>` or sign in through the browser form and use its session cookie. HTTP Basic credentials are no longer accepted. Keys are created and revoked in User Settings, never in Administration on behalf of another user. Both methods require `api.view`, and all requests recheck account enablement and current role permissions. Browser sessions are also accepted for same-origin use with the same API permission checks. POST clock mutations accept JSON; session-cookie requests must include the matching Origin header.
 
 Unauthorized requests return 401; missing permissions return 403; invalid input returns 422. Login has a bounded attempt limit. Disabled users and revoked keys lose access immediately. Password changes invalidate sessions and keys.
 

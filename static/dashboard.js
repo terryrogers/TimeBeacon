@@ -34,13 +34,14 @@ async function refreshServer() {
 }
 async function configureTheme() {
     try {
-        const solar = await fetchJson(`/dashboard/solar?latitude=${encodeURIComponent(settings.latitude)}&longitude=${encodeURIComponent(settings.longitude)}`);
+        const solar = await fetchJson("/dashboard/solar");
         document.documentElement.dataset.theme=solar.theme;
         document.getElementById("solar-summary").textContent=settings.location+" · "+(solar.theme === "dark" ? "Night" : "Daylight");
     } catch { document.getElementById("solar-summary").textContent="Daylight calculation unavailable"; }
 }
 function configureSettings() {}
 function configureClocks() {
+    if (!document.getElementById("clock-form")) return;
     const zones=[...new Set(["UTC", ...(Intl.supportedValuesOf ? Intl.supportedValuesOf("timeZone") : DEFAULT_TIMEZONES.map(item => item.zone))])];
     const cityLabel=zone => zone === "UTC" ? "UTC (Coordinated Universal Time)" : zone.split("/").slice(1).join(" / ").replaceAll("_"," ")+" — "+zone.split("/")[0];
     zones.sort((a,b)=>cityLabel(a).localeCompare(cityLabel(b)));
@@ -152,6 +153,7 @@ function dataTable(headers,rows) {
     const wrap=document.createElement("div");wrap.className="table-scroll";
     const table=document.createElement("table"),head=table.createTHead().insertRow();
     headers.forEach(label=>{const th=document.createElement("th");th.textContent=label;head.append(th);});
+    table.className="ui unstackable table";
     const body=table.createTBody();
     rows.forEach(row=>{const tr=body.insertRow();row.forEach(value=>{tr.insertCell().textContent=value ?? "Unavailable";});});
     wrap.append(table);return wrap;

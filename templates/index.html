@@ -1,370 +1,356 @@
 <!DOCTYPE html>
+
 <html data-theme="light" lang="en">
- <head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1" name="viewport"/>
-  <meta content="noindex, nofollow" name="robots"/>
-  <title>
+<head><link href="/static/vendor/semantic/semantic.min.css" rel="stylesheet"/>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="noindex, nofollow" name="robots"/>
+<title>
    TimeBeacon · {{ hostname }}
   </title>
-  <link href="/static/app.css?v={{ asset_version }}" rel="stylesheet"/>
-  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v={{ asset_version }}"/>
- </head>
- <body>
-  <header class="topbar">
-   <div>
-    <div class="brand"><img src="/static/timebeacon-logo.png" alt="" width="58" height="58"/><div><h1>TimeBeacon</h1><div class="host-label">{{ hostname }} Server Dashboard</div></div></div>
-    <div class="server-state">
-     <span class="status-dot unknown" id="status-dot">
-     </span>
-     <span id="server-status">
+<link href="/static/app.css?v={{ asset_version }}" rel="stylesheet"/>
+<link href="/static/favicon.svg?v={{ asset_version }}" rel="icon" type="image/svg+xml"/>
+<link href="/static/theme.css?v={{ asset_version }}" rel="stylesheet"/></head>
+<body>
+<header class="topbar">
+<div>
+<div class="brand"><img alt="" height="58" src="/static/timebeacon-logo.png" width="58"/><div><h1>TimeBeacon</h1><div class="host-label">{{ hostname }} Server Dashboard</div></div></div>
+<div class="server-state">
+<span class="status-dot unknown" id="status-dot">
+</span>
+<span id="server-status">
       Checking server...
      </span>
-     <button class="details-link" id="service-details-button" type="button">
+<button class="details-link ui button" id="service-details-button" type="button">
       (Details)
      </button>
-    </div>
-   </div>
-   <div class="header-controls">
-    <label class="toggle-control">
-     <span>
+</div>
+</div>
+<div class="header-controls">
+<label class="toggle-control">
+<span>
       Expand All
      </span>
-     <input id="expand-toggle" type="checkbox"/>
-     <span class="toggle">
-     </span>
-    </label>
-    <button id="settings-button" type="button">
+<input id="expand-toggle" type="checkbox"/>
+<span class="toggle">
+</span>
+</label>
+<button class="ui button" id="settings-button" type="button">
      Administration
     </button>
-    <button id="user-settings-button" type="button">User Settings</button>
-    <button id="logout-button" type="button">Sign out</button>
-    <span class="muted" id="solar-summary">
+<button class="ui button" id="user-settings-button" type="button">User Settings</button>
+<button class="ui button" id="logout-button" type="button">Sign out</button>
+<span class="muted" id="solar-summary">
      Automatic daylight theme
     </span>
-   </div>
-  </header>
-  <main hidden>
-   <div class="error-banner hidden" id="error-banner">
-   </div>
-   <div id="health-message" role="status">
-   </div>
-   <section class="section">
-    <div class="section-heading">
-     <h2>
+</div>
+</header>
+<main hidden="">
+<div class="error-banner hidden" id="error-banner">
+</div>
+<div id="health-message" role="status">
+</div>
+<section class="section">
+<div class="section-heading">
+<h2>
       Server Status
      </h2>
-    </div>
-    <div class="status-grid">
-     <button class="metric" data-history="cpu" type="button">
-      <span class="metric-label">
+</div>
+<div class="status-grid">
+<button class="metric ui button ui segment" data-history="cpu" type="button">
+<span class="metric-label">
        CPU
       </span>
-      <span class="metric-value" id="system-cpu">
+<span class="metric-value" id="system-cpu">
        —
       </span>
-     </button>
-     <button class="metric" data-history="ram" type="button">
-      <span class="metric-label">
+</button>
+<button class="metric ui button ui segment" data-history="ram" type="button">
+<span class="metric-label">
        RAM
       </span>
-      <span class="metric-value" id="system-ram">
+<span class="metric-value" id="system-ram">
        —
       </span>
-     </button>
-     <button class="metric" data-history="storage" type="button">
-      <span class="metric-label">
+</button>
+<button class="metric ui button ui segment" data-history="storage" type="button">
+<span class="metric-label">
        Storage
       </span>
-      <span class="metric-value" id="system-storage">
+<span class="metric-value" id="system-storage">
        —
       </span>
-     </button>
-     <button class="metric" data-history="temperature" type="button">
-      <span class="metric-label">
+</button>
+<button class="metric ui button ui segment" data-history="temperature" type="button">
+<span class="metric-label">
        CPU Temperature
       </span>
-      <span class="metric-value" id="system-temperature">
+<span class="metric-value" id="system-temperature">
        —
       </span>
-     </button>
-     <div class="metric">
-      <span class="metric-label">
+</button>
+<div class="metric ui segment">
+<span class="metric-label">
        Uptime
       </span>
-      <span id="system-uptime">
+<span id="system-uptime">
        —
       </span>
-     </div>
-    </div>
-   </section>
-   <section class="section">
-    <div class="section-heading">
-     <div>
-      <h2 id="time-server-heading">
+</div>
+</div>
+</section>
+<section class="section">
+<div class="section-heading">
+<div>
+<h2 id="time-server-heading">
        Time Server Status
       </h2>
-     </div>
-    </div>
-    <div class="status-grid">
-     <div class="metric">
-      <span class="metric-label">
+</div>
+</div>
+<div class="status-grid">
+<div class="metric ui segment">
+<span class="metric-label">
        Stratum
       </span>
-      <span class="metric-value" id="stratum">
+<span class="metric-value" id="stratum">
        -
       </span>
-     </div>
-     <div class="metric">
-      <span class="metric-label">
+</div>
+<div class="metric ui segment">
+<span class="metric-label">
        Reference
       </span>
-      <span class="metric-value" id="reference-id">
+<span class="metric-value" id="reference-id">
        -
       </span>
-     </div>
-     <div class="metric">
-      <span class="metric-label">
+</div>
+<div class="metric ui segment">
+<span class="metric-label">
        Last Offset
       </span>
-      <span class="metric-value" id="last-offset">
+<span class="metric-value" id="last-offset">
        -
       </span>
-     </div>
-     <div class="metric">
-      <span class="metric-label">
+</div>
+<div class="metric ui segment">
+<span class="metric-label">
        RMS Offset
       </span>
-      <span class="metric-value" id="rms-offset">
+<span class="metric-value" id="rms-offset">
        -
       </span>
-     </div>
-     <div class="metric">
-      <span class="metric-label">
+</div>
+<div class="metric ui segment">
+<span class="metric-label">
        Leap Status
       </span>
-      <span class="metric-value" id="leap-status">
+<span class="metric-value" id="leap-status">
        -
       </span>
-     </div>
-     <div class="metric">
-      <span class="metric-label">
+</div>
+<div class="metric ui segment">
+<span class="metric-label">
        NTP RTT
       </span>
-      <span class="metric-value" id="ntp-rtt">
+<span class="metric-value" id="ntp-rtt">
        -
       </span>
-     </div>
-    </div>
-   </section>
-   <section aria-label="GPS and time acquisition" class="section status-grid acquisition-grid">
-    <button class="metric" data-acquisition="fix" type="button">
-     <span class="metric-label">
+</div>
+</div>
+</section>
+<section aria-label="GPS and time acquisition" class="section status-grid acquisition-grid">
+<button class="metric ui button ui segment" data-acquisition="fix" type="button">
+<span class="metric-label">
       GPS Fix
      </span>
-     <strong class="metric-value" id="acquisition-fix">
+<strong class="metric-value" id="acquisition-fix">
       Checking…
      </strong>
-    </button>
-    <button class="metric" data-acquisition="satellites" type="button">
-     <span class="metric-label">
+</button>
+<button class="metric ui button ui segment" data-acquisition="satellites" type="button">
+<span class="metric-label">
       Satellites
      </span>
-     <strong class="metric-value" id="acquisition-satellites">
+<strong class="metric-value" id="acquisition-satellites">
       Checking…
      </strong>
-    </button>
-    <button class="metric" data-acquisition="pps" type="button">
-     <span class="metric-label">
+</button>
+<button class="metric ui button ui segment" data-acquisition="pps" type="button">
+<span class="metric-label">
       PPS
      </span>
-     <strong class="metric-value" id="acquisition-pps">
+<strong class="metric-value" id="acquisition-pps">
       Checking…
      </strong>
-    </button>
-    <button class="metric" data-acquisition="time" type="button">
-     <span class="metric-label">
+</button>
+<button class="metric ui button ui segment" data-acquisition="time" type="button">
+<span class="metric-label">
       Time Acquisition
      </span>
-     <strong class="metric-value" id="acquisition-time">
+<strong class="metric-value" id="acquisition-time">
       Checking…
      </strong>
-    </button>
-   </section>
-   <details class="section panel" id="world-panel">
-    <summary>
-     <h2>
+</button>
+</section>
+<details class="section panel ui segment" id="world-panel">
+<summary>
+<h2>
       World Clocks
      </h2>
-    </summary>
-    <form class="controls" id="clock-form">
-     <label for="clock-zone">
-      Add a clock
-     </label>
-     <select aria-label="City or time zone" id="clock-zone" required="True">
-     </select>
-     <button type="submit">
-      Add clock
-     </button>
-    </form>
-    <p id="clock-feedback" role="status">
-    </p>
-    <div class="clock-grid" id="clocks">
-    </div>
-   </details>
-   <details class="section panel" id="clients-panel">
-    <summary>
-     <h2>
+</summary>
+
+
+<div class="clock-grid" id="clocks">
+</div>
+</details>
+<details class="section panel ui segment" id="clients-panel">
+<summary>
+<h2>
       Time Clients
      </h2>
-    </summary>
-    <div class="summary-grid">
-     <div class="summary-card total">
-      <span>
+</summary>
+<div class="summary-grid">
+<div class="summary-card total ui segment">
+<span>
        Clients
       </span>
-      <strong id="clients-count">
+<strong id="clients-count">
        0
       </strong>
-     </div>
-     <div class="summary-card ok">
-      <span>
+</div>
+<div class="summary-card ok ui segment">
+<span>
        Healthy
       </span>
-      <strong id="count-ok">
+<strong id="count-ok">
        0
       </strong>
-     </div>
-     <div class="summary-card warning">
-      <span>
+</div>
+<div class="summary-card warning ui segment">
+<span>
        Warning
       </span>
-      <strong id="count-warning">
+<strong id="count-warning">
        0
       </strong>
-     </div>
-     <div class="summary-card critical">
-      <span>
+</div>
+<div class="summary-card critical ui segment">
+<span>
        Critical
       </span>
-      <strong id="count-critical">
+<strong id="count-critical">
        0
       </strong>
-     </div>
-     <div class="summary-card unknown">
-      <span>
+</div>
+<div class="summary-card unknown ui segment">
+<span>
        Unknown
       </span>
-      <strong id="count-unknown">
+<strong id="count-unknown">
        0
       </strong>
-     </div>
-    </div>
-    <div class="controls">
-     <input autocomplete="off" id="search" placeholder="Search clients..." type="search"/>
-     <select id="sort-select">
-      <option value="default">
+</div>
+</div>
+<div class="controls">
+<input autocomplete="off" id="search" placeholder="Search clients..." type="search"/>
+<select class="ui dropdown" id="sort-select">
+<option value="default">
        Hostname / IP
       </option>
-      <option value="drop">
+<option value="drop">
        Drop Count
       </option>
-      <option value="last">
+<option value="last">
        Last Seen
       </option>
-     </select>
-    </div>
-    <div class="client-grid" id="client-grid">
-    </div>
-   </details>
-   <footer>
-    <span>
+</select>
+</div>
+<div class="client-grid" id="client-grid">
+</div>
+</details>
+<footer>
+<span>
      Last refresh:
      <span id="last-refresh">
       Never
      </span>
-    </span>
-    <a href="/docs">
+</span>
+<a href="/docs">
      API Documentation
     </a>
-    <span>© 2026 Terry Rogers · <a href="/static/LICENSE.txt">MIT License</a> · Dashboard {{ dashboard_version }} · API {{ api_version }}</span>
-   </footer>
-  </main>
-  <dialog id="login-dialog" aria-labelledby="login-title"><h2 id="login-title">Sign in to TimeBeacon</h2><form id="login-form"><label>Username<input name="username" autocomplete="username" required/></label><label>Password<input name="password" type="password" autocomplete="current-password" required/></label><p id="login-feedback" role="status"></p><button>Sign in</button></form></dialog>
-  <dialog id="user-dialog" aria-labelledby="user-title"><form method="dialog"><button aria-label="Close user settings">×</button></form><h2 id="user-title">User Settings</h2><p id="user-identity"></p><section id="user-clocks"><h3>My world clocks</h3><div id="clock-settings-list"></div></section><h3>Change password</h3><form id="password-form"><label>Current password<input name="current_password" type="password" autocomplete="current-password" required/></label><label>New password<input name="new_password" type="password" minlength="8" maxlength="256" autocomplete="new-password" required/></label><button>Change password</button></form><section id="key-section"><h3>My API keys</h3><p>Keys inherit your account's current permissions.</p><div id="key-list"></div><form id="key-form"><label>Key name<input name="name" maxlength="80" required/></label><button>Create API key</button></form><output id="new-key"></output></section><p id="user-feedback" role="status"></p></dialog>
-  <dialog id="admin-dialog" aria-labelledby="admin-title"><form method="dialog"><button aria-label="Close administration">×</button></form><h2 id="admin-title">Administration</h2><p id="admin-feedback" role="status"></p><details open><summary>Users</summary><div id="admin-users"></div><form id="admin-user-form"><input name="id" type="hidden"/><label>Username<input name="username" pattern="[A-Za-z0-9_.@-]{1,80}" required/></label><label>Password (required for new users; leave empty to keep)<input name="password" type="password" minlength="8" maxlength="256" autocomplete="new-password"/></label><label><input name="enabled" type="checkbox" checked/>Account enabled</label><fieldset id="user-roles"><legend>Roles</legend></fieldset><button>Save user</button><button id="new-user" type="button">New user</button></form></details><details><summary>Roles</summary><div id="admin-roles"></div><form id="admin-role-form"><label>Role name<input name="name" maxlength="80" required/></label><fieldset id="role-permissions"><legend>Permissions</legend></fieldset><button>Save role</button></form></details><details><summary>Health checks, thresholds and daylight location</summary><form id="admin-config-form"><label>Systemd services to check (one per line)<textarea name="services" rows="7" required></textarea></label><label>Client warning after (seconds)<input name="warning_seconds" type="number" min="1" required/></label><label>Client critical after (seconds)<input name="critical_seconds" type="number" min="2" required/></label><label>Dropped packets warning threshold<input name="warning_drops" type="number" min="1" required/></label><label>Dropped packets critical threshold<input name="critical_drops" type="number" min="2" required/></label><label>Location<input name="location" required/></label><label>Latitude<input name="latitude" type="number" step="any" min="-90" max="90" required/></label><label>Longitude<input name="longitude" type="number" step="any" min="-180" max="180" required/></label><button>Save configuration</button></form></details></dialog>
-  <dialog aria-labelledby="history-title" id="history-dialog">
-   <div class="window-titlebar"><h2 id="history-title"></h2><form method="dialog"><button aria-label="Close graph" class="window-close">×</button></form></div>
-   <p id="history-message" role="status"></p>
-   <svg aria-label="Selected history period" id="history-graph" role="img" viewbox="0 0 900 320">
-   </svg>
-   <div class="history-controls-scroll"><div class="history-controls">
-    <label>History length <select id="history-duration"><option value="custom" disabled hidden>Custom period</option><option value="15">15 Minutes</option><option value="30">30 Minutes</option><option value="60" selected>60 Minutes</option><option value="120">2 Hours</option><option value="240">4 Hours</option><option value="480">8 Hours</option><option value="960">16 Hours</option><option value="1440">24 Hours</option><option value="all">All of Time</option></select></label>
-    <label>From <input id="history-start" type="datetime-local"/></label>
-    <label>To <input id="history-end" type="datetime-local"/></label>
-   </div></div>
-   <div id="history-details"></div>
-   <div class="window-statusbar"><span id="history-gap"></span><span id="history-count">0 samples</span></div>
+<span>© 2026 Terry Rogers · <a href="/static/LICENSE.txt">MIT License</a> · Dashboard {{ dashboard_version }} · API {{ api_version }}</span>
+</footer>
+</main>
 
-  </dialog>
-  <script src="/static/access.js?v={{ asset_version }}"></script>
-  <script src="/static/app.js?v={{ asset_version }}">
-  </script>
-  <script src="/static/dashboard.js?v={{ asset_version }}">
-  </script>
-  <dialog aria-labelledby="services-title" id="service-details-dialog">
-   <form method="dialog">
-    <button aria-label="Close service details">
-     Close
-    </button>
-   </form>
-   <h2 id="services-title">
+
+
+<dialog aria-labelledby="history-title" class="ui modal window" id="history-dialog"><div class="window-titlebar"><h2 id="history-title"></h2><form class="ui form" method="dialog"><button aria-label="Close graph" class="window-close ui button">×</button></form></div><div class="window-content">
+
+<p id="history-message" role="status"></p>
+<svg aria-label="Selected history period" id="history-graph" role="img" viewbox="0 0 900 320">
+</svg>
+<div class="history-controls-scroll"><div class="history-controls">
+<label>History length <select class="ui dropdown" id="history-duration"><option disabled="" hidden="" value="custom">Custom period</option><option value="15">15 Minutes</option><option value="30">30 Minutes</option><option selected="" value="60">60 Minutes</option><option value="120">2 Hours</option><option value="240">4 Hours</option><option value="480">8 Hours</option><option value="960">16 Hours</option><option value="1440">24 Hours</option><option value="all">All of Time</option></select></label>
+<label>From <input id="history-start" type="datetime-local"/></label>
+<label>To <input id="history-end" type="datetime-local"/></label>
+</div></div>
+<div id="history-details"></div>
+
+</div><div class="window-statusbar"><span id="history-gap"></span><span id="history-count">0 samples</span></div></dialog>
+<script src="/static/access.js?v={{ asset_version }}"></script>
+<script src="/static/app.js?v={{ asset_version }}">
+</script>
+<script src="/static/dashboard.js?v={{ asset_version }}">
+</script>
+<dialog aria-labelledby="services-title" class="ui modal window" id="service-details-dialog"><div class="window-titlebar"><h2 id="services-title">
     Server Status Details
-   </h2>
-   <p>
+   </h2><form class="ui form" method="dialog">
+<button aria-label="Close service details" class="ui button window-close">×</button>
+</form></div><div class="window-content">
+
+
+<p>
     Services included in the status indicator. CPU is percent of one core; RAM uses service accounting when available, otherwise process RSS.
    </p>
-   <div class="table-scroll">
-    <table>
-     <thead>
-      <tr>
-       <th>
+<div class="table-scroll">
+<table class="ui unstackable table">
+<thead>
+<tr>
+<th>
         Name
        </th>
-       <th>
+<th>
         Startup
        </th>
-       <th>
+<th>
         Status
        </th>
-       <th>
+<th>
         CPU
        </th>
-       <th>
+<th>
         RAM
        </th>
-      </tr>
-     </thead>
-     <tbody id="service-details-body">
-     </tbody>
-    </table>
-   </div>
-   <h3>
+</tr>
+</thead>
+<tbody id="service-details-body">
+</tbody>
+</table>
+</div>
+<h3>
     Additional health checks
    </h3>
-   <ul id="health-check-details">
-   </ul>
-  </dialog>
-  <dialog aria-labelledby="acquisition-title" id="acquisition-dialog">
-   <form method="dialog">
-    <button aria-label="Close acquisition details">
-     Close
-    </button>
-   </form>
-   <h2 id="acquisition-title">
-   </h2>
-   <div id="acquisition-content">
-   </div>
-  </dialog>
- </body>
+<ul id="health-check-details">
+</ul>
+</div><div class="window-statusbar"><span></span><span>TimeBeacon</span></div></dialog>
+<dialog aria-labelledby="acquisition-title" class="ui modal window" id="acquisition-dialog"><div class="window-titlebar"><h2 id="acquisition-title">
+</h2><form class="ui form" method="dialog">
+<button aria-label="Close acquisition details" class="ui button window-close">×</button>
+</form></div><div class="window-content">
+
+
+<div id="acquisition-content">
+</div>
+</div><div class="window-statusbar"><span></span><span>TimeBeacon</span></div></dialog>
+</body>
 </html>
