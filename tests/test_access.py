@@ -403,3 +403,9 @@ def test_password_change_and_attempt_limit(system):
     for _ in range(10):
         assert login(c, "invalid", "invalid").status_code == 401
     assert login(c, "invalid", "invalid").status_code == 429
+
+
+def test_session_probe_does_not_trigger_browser_basic_prompt(system):
+    _,client=system
+    assert "www-authenticate" not in client.get("/auth/me").headers
+    assert "www-authenticate" in client.get("/server/status").headers

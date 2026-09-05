@@ -185,7 +185,7 @@ CREATE TABLE IF NOT EXISTS login_attempts(address TEXT NOT NULL,stamp INTEGER NO
             raise HTTPException(
                 401,
                 "Authentication required",
-                headers={"WWW-Authenticate": 'Basic realm="TimeBeacon"'},
+                headers={"WWW-Authenticate": 'Basic realm="TimeBeacon"'} if api else {},
             )
         if api or authorization:
             self.require(user, "api.view")
