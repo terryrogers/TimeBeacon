@@ -162,15 +162,50 @@ function dataTable(headers,rows) {
 }
 function renderServiceDetails(data) {
     const body=document.getElementById("service-details-body");body.replaceChildren();
+    document.getElementById("service-action-heading").hidden=!can("admin");
     for(const service of data.services || []) {
         const row=body.insertRow();
         const values=[service.name,service.startup || "Unknown",data.stale ? "Stale" : service.status || service.state,
             !data.stale && Number.isFinite(service.cpu) ? service.cpu.toFixed(2)+"%" : "Sampling…",
             !data.stale && Number.isFinite(service.ram) ? (service.ram/1048576).toFixed(1)+" MiB"+(service.ram_kind === "RSS" ? " (RSS)" : "") : "Unavailable"];
         values.forEach(value=>{row.insertCell().textContent=value;});
+        if(can("admin")) {
+            const cell=row.insertCell();
+            if(service.running===false || (service.state && service.state!=="active")) {
+                const button=uiButton("Fix",()=>showServiceRepair(service.name));
+                button.classList.add("small","primary");button.setAttribute("aria-label","Fix "+service.name);cell.append(button);
+            }
+        }
     }
     const checks=Object.entries(data.checks || {}).map(([name,ok])=>{const li=document.createElement("li");li.textContent=name.replaceAll("_"," ")+": "+(data.stale ? "Stale" : ok ? "Passed" : "Needs attention");return li;});
     document.getElementById("health-check-details").replaceChildren(...checks);
+}
+let repairBusy=false, repairPreview=null;
+async function showServiceRepair(unit) {
+    if(repairBusy)return;
+    repairPreview=null;
+    const dialog=document.getElementById("service-repair-dialog"),message=document.getElementById("service-repair-message"),button=document.getElementById("service-repair-confirm");
+    document.getElementById("service-repair-unit").textContent=unit;
+    message.textContent="Checking current service state…";button.hidden=true;button.disabled=true;dialog.showModal();
+    repairBusy=true;
+    try {
+        repairPreview=await accessRequest("/administration/services/repair?unit="+encodeURIComponent(unit));
+        message.textContent=repairPreview.message;button.textContent=repairPreview.label;button.hidden=!repairPreview.action;button.disabled=false;
+    } catch(error) {message.textContent=error.message;}
+    finally {repairBusy=false;}
+}
+async function confirmServiceRepair() {
+    if(repairBusy || !repairPreview?.action)return;
+    repairBusy=true;
+    const button=document.getElementById("service-repair-confirm"),message=document.getElementById("service-repair-message");
+    button.disabled=true;message.textContent="Applying service action…";
+    try {
+        const {unit,action,config_version}=repairPreview;
+        const result=await accessRequest("/administration/services/repair","POST",{unit,action,config_version});
+        message.textContent=result.message;document.getElementById("service-action-feedback").textContent=result.message;button.hidden=true;
+        await refreshServer();
+    } catch(error) {message.textContent=error.message;button.hidden=true;}
+    finally {repairBusy=false;repairPreview=null;}
 }
 function showAcquisition(key) {
     const gps=acquisitionData.gps || {},acq=acquisitionData.acquisition || {};
@@ -197,6 +232,7 @@ function showAcquisition(key) {
     dialog.showModal();
 }
 function configureAcquisition() {
+    document.getElementById("service-repair-confirm").addEventListener("click",confirmServiceRepair);
     document.getElementById("service-details-button").addEventListener("click",()=>document.getElementById("service-details-dialog").showModal());
     document.querySelectorAll("[data-acquisition]").forEach(card=>card.addEventListener("click",()=>showAcquisition(card.dataset.acquisition)));
 }
@@ -204,7 +240,7 @@ function configureAcquisition() {
 let sharedVersion=0, sharedConfigVersion=0;
 function applySharedSettings(payload) {
     sharedVersion=payload.version;sharedConfigVersion=payload.config_version || 0;
-    settings={location:payload.settings.location,latitude:payload.settings.latitude,longitude:payload.settings.longitude};
+    settings={location:payload.settings.location,latitude:payload.settings.latitude,longitude:payload.settings.longitude,clock_backgrounds:payload.settings.clock_backgrounds};
     TIMEZONES=payload.settings.clocks;
     buildClocks();updateClocks();configureTheme();renderClockSettings();
 }

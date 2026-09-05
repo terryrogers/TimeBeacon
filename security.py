@@ -65,7 +65,9 @@ class IdentityStore:
 CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY,username TEXT UNIQUE NOT NULL,password TEXT NOT NULL,roles TEXT NOT NULL,enabled INTEGER NOT NULL DEFAULT 1,clocks TEXT NOT NULL,version INTEGER NOT NULL DEFAULT 1);
 CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY,user_id INTEGER NOT NULL,expires INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS api_keys(id INTEGER PRIMARY KEY,user_id INTEGER NOT NULL,name TEXT NOT NULL,token TEXT UNIQUE NOT NULL,created INTEGER NOT NULL);
-CREATE TABLE IF NOT EXISTS login_attempts(address TEXT NOT NULL,stamp INTEGER NOT NULL);"""
+CREATE TABLE IF NOT EXISTS login_attempts(address TEXT NOT NULL,stamp INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS service_actions(id INTEGER PRIMARY KEY,stamp REAL NOT NULL,user_id INTEGER NOT NULL,unit TEXT NOT NULL,action TEXT NOT NULL,result TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS city_images(zone TEXT PRIMARY KEY,payload TEXT NOT NULL,expires REAL NOT NULL);"""
             )
             db.execute("BEGIN IMMEDIATE")
             columns = {r[1] for r in db.execute("PRAGMA table_info(users)")}
@@ -79,6 +81,7 @@ CREATE TABLE IF NOT EXISTS login_attempts(address TEXT NOT NULL,stamp INTEGER NO
                 "totp_pending_until": "INTEGER NOT NULL DEFAULT 0",
                 "totp_last": "INTEGER NOT NULL DEFAULT -1",
                 "recovery": "TEXT NOT NULL DEFAULT '[]'",
+                "clock_backgrounds": "INTEGER NOT NULL DEFAULT 1",
             }.items():
                 if name not in columns:
                     db.execute(f"ALTER TABLE users ADD COLUMN {name} {definition}")
@@ -159,6 +162,7 @@ CREATE TABLE IF NOT EXISTS login_attempts(address TEXT NOT NULL,stamp INTEGER NO
             "permissions": sorted(permissions),
             "clocks": json.loads(row[4]),
             "version": row[5],
+            "clock_backgrounds": bool(db.execute('SELECT clock_backgrounds FROM users WHERE id=?', (user_id,)).fetchone()[0]),
             "location": json.loads(
                 db.execute(
                     "SELECT location FROM users WHERE id=?", (user_id,)

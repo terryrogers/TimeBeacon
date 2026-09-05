@@ -34,4 +34,8 @@ Two-factor registration uses a locally generated QR code and TOTP-compatible aut
 
 ## Development
 
+Administrators can select **Details → Fix** beside a degraded monitored service. The confirmation window checks current systemd state: it can start a loaded inactive/failed service, or explicitly remove the health check for a missing/masked service that is no longer required. Removing a check changes monitoring, not the service. Startup configuration is unchanged. Actions are audited in SQLite and rate-limited per service; service starts require the application account's existing non-interactive sudo permission for `systemctl start`. Active services are never restarted by this control. Additional Chrony/NTP health checks may still require diagnosis after all services are running.
+
+**User Settings → My world clocks → Show city backgrounds** controls optional photographs for that account (enabled by default). Metadata comes from Wikipedia and Wikimedia Commons and is cached in SQLite for seven days; unavailable results are cached for six hours. Browser images load directly from Wikimedia with no referrer. Only attributed freely licensed images are displayed, with an on-tile photo-credit control; the application's MIT license does not replace each photo's license. UTC and cities without a suitable photograph retain plain tiles.
+
 Run `python -m pytest -q`. Tests require pytest, Playwright with Edge, httpx and runtime dependencies. Version constants are in version.py; changes are recorded in CHANGELOG.md. Source control excludes databases, credentials, local deployment records and generated test evidence. Local tests, deployed service checks and user acceptance are separate verification stages.

@@ -878,12 +878,29 @@ function buildClocks() {
                 });
                 const offset=document.createElement("div"); offset.className="clock-offset";
                 offset.dataset.offsetZone=item.zone; card.append(offset);
+                if(settings.clock_backgrounds)queueMicrotask(()=>loadCityBackground(card,item));
                 return card;
             }
         )
     );
 }
 
+
+async function loadCityBackground(card,item) {
+    try {
+        const {image:photo}=await accessRequest("/dashboard/clocks/image?zone="+encodeURIComponent(item.zone));
+        if(!photo || !card.isConnected || !settings.clock_backgrounds)return;
+        const image=document.createElement("img");image.className="clock-city-background";image.alt="";image.setAttribute("aria-hidden","true");image.loading="lazy";image.referrerPolicy="no-referrer";
+        const credit=uiButton("ⓘ",()=>showCityPhotoCredit(photo));credit.className="ui icon button clock-photo-credit";credit.setAttribute("aria-label","Photo credit for "+item.name);credit.title="Photo credit";credit.hidden=true;
+        image.onload=()=>{credit.hidden=false;};image.onerror=()=>{image.remove();credit.remove();};image.src=photo.image_url;card.prepend(image);card.append(credit);
+    } catch { /* Photos are optional; clocks remain usable when imagery is unavailable. */ }
+}
+function showCityPhotoCredit(photo) {
+    const dialog=document.getElementById("city-photo-dialog"),content=document.getElementById("city-photo-content");content.replaceChildren();
+    for(const text of [photo.city,photo.artist,photo.credit,photo.license])if(text){const p=document.createElement("p");p.textContent=text;content.append(p);}
+    const link=document.createElement("a");link.href=photo.source_url;link.textContent="Original photograph and licence on Wikimedia Commons";link.target="_blank";link.rel="noopener noreferrer";content.append(link);
+    dialog.showModal();
+}
 
 function updateClocks() {
 

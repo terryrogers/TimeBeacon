@@ -16,6 +16,7 @@ from security import IdentityStore, PERMISSIONS, digest, password_hash, password
 from telemetry import REQUIRED_SERVICES, solar_status
 from account_api import ProfileInput, profile
 from server_info import system_information
+from city_images import city_image
 
 
 class Login(BaseModel):
@@ -190,6 +191,7 @@ def install(app, backend):
             "version": user["version"],
             "config_version": backend.monitor.get_settings()["version"],
             "settings": {
+                "clock_backgrounds": user["clock_backgrounds"],
                 **user["location"],
                 "clocks": (
                     user["clocks"]
@@ -491,6 +493,16 @@ def install(app, backend):
     @app.get("/dashboard/status", include_in_schema=False)
     def status(request: Request):
         return filtered_status(who(request, "dashboard.view"))
+
+    @app.get('/dashboard/clocks/image', include_in_schema=False)
+    def clock_image(request: Request, zone: str):
+        user = who(request, 'dashboard.view', 'clocks.view')
+        if not user['clock_backgrounds']:
+            return {'image': None}
+        clock = next((clock for clock in user['clocks'] if clock['zone'] == zone), None)
+        if clock is None:
+            raise HTTPException(404, 'This clock is not configured for your account')
+        return {'image': city_image(backend.monitor, zone, clock.get('name'))}
 
     @app.get("/dashboard/solar", include_in_schema=False)
     def solar(request: Request):

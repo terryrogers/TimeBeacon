@@ -1,5 +1,12 @@
 # Changelog
 
+## Dashboard 5.2.0 / API 4.1.0 — 5 September 2026
+
+- Administrator Fix controls for degraded monitored services, with a fresh state check and explicit action confirmation. Stopped services can be started; missing or masked services can have an obsolete health check removed without installing or unmasking them. Actions are recorded in SQLite and protected by role checks, same-origin validation and a cooldown.
+- Operating System and Hardware now occupy separate side-by-side panels, stacked on narrow screens.
+- Optional faint city photographs on world clocks, controlled per account in User Settings. Wikimedia Commons attribution is available on each photo tile; unavailable images leave a plain clock.
+- Additive account preference and photo-cache migrations preserve existing account and monitoring data. Public API contracts remain at 4.1.0.
+
 ## Dashboard 5.1.0 / API 4.1.0 — 5 September 2026
 
 - Add detected operating system and hardware details above Server Status.

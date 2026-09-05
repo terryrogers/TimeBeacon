@@ -50,10 +50,10 @@
 </div>
 <div id="health-message" role="status">
 </div>
-<section aria-label="System information" class="section ui segment system-information" id="system-information">
-<dl><dt>Operating System:</dt><dd id="operating-system">Detecting…</dd>
-<dt>Hardware:</dt><dd id="hardware-details">Detecting…</dd></dl>
-</section>
+<div aria-label="System information" class="section system-information-grid" id="system-information">
+<section aria-label="Operating System" class="ui segment system-information"><h2>Operating System</h2><p id="operating-system">Detecting…</p></section>
+<section aria-label="Hardware" class="ui segment system-information"><h2>Hardware</h2><p id="hardware-details">Detecting…</p></section>
+</div>
 <section class="section">
 <div class="section-heading">
 <h2>
@@ -334,7 +334,7 @@
        </th>
 <th>
         RAM
-       </th>
+       </th><th id="service-action-heading" hidden>Action</th>
 </tr>
 </thead>
 <tbody id="service-details-body">
@@ -346,7 +346,7 @@
    </h3>
 <ul id="health-check-details">
 </ul>
-</div><div class="window-statusbar"><span></span><span>TimeBeacon</span></div></dialog>
+</div><div class="window-statusbar"><span id="service-action-feedback" role="status"></span><span>TimeBeacon</span></div></dialog>
 <dialog aria-labelledby="acquisition-title" class="ui modal window" id="acquisition-dialog"><div class="window-titlebar"><h2 id="acquisition-title">
 </h2><form class="ui form" method="dialog">
 <button aria-label="Close acquisition details" class="ui button window-close">×</button>
@@ -356,5 +356,7 @@
 <div id="acquisition-content">
 </div>
 </div><div class="window-statusbar"><span></span><span>TimeBeacon</span></div></dialog>
+<dialog class="ui modal window" id="service-repair-dialog" aria-labelledby="service-repair-title"><div class="window-titlebar"><h2 id="service-repair-title">Fix service</h2><form method="dialog"><button class="ui icon button window-close" aria-label="Close service repair">×</button></form></div><div class="window-content"><h3 id="service-repair-unit"></h3><p id="service-repair-message" role="status"></p><button type="button" class="ui primary button" id="service-repair-confirm" hidden>Confirm</button></div><div class="window-statusbar"><span>Administrator service control</span><span>TimeBeacon</span></div></dialog>
+<dialog class="ui modal window" id="city-photo-dialog" aria-labelledby="city-photo-title"><div class="window-titlebar"><h2 id="city-photo-title">City photograph</h2><form method="dialog"><button class="ui icon button window-close" aria-label="Close photo credit">×</button></form></div><div class="window-content" id="city-photo-content"></div><div class="window-statusbar"><span>Photograph displayed faintly and cropped to fit</span><span>Wikimedia Commons</span></div></dialog>
 </body>
 </html>

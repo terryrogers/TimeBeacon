@@ -54,6 +54,10 @@ class LocationInput(BaseModel):
     longitude: float = Field(ge=-180, le=180, allow_inf_nan=False)
 
 
+class ClockBackgrounds(BaseModel):
+    enabled: bool
+
+
 class Verification(BaseModel):
     password: str = Field(min_length=1, max_length=256)
     code: str = Field(default="", max_length=80)
@@ -65,7 +69,7 @@ class Confirm(BaseModel):
 
 def profile(db, user_id):
     row = db.execute(
-        "SELECT name,email,photo,totp,location FROM users WHERE id=?", (user_id,)
+        "SELECT name,email,photo,totp,location,clock_backgrounds FROM users WHERE id=?", (user_id,)
     ).fetchone()
     return dict(
         name=row[0],
@@ -77,6 +81,7 @@ def profile(db, user_id):
         + hashlib.sha256(row[1].strip().lower().encode()).hexdigest()
         + "?s=160&d=mp",
         location=json.loads(row[4]),
+        clock_backgrounds=bool(row[5]),
     )
 
 
@@ -97,6 +102,13 @@ def install(app, backend):
             request.client.host if request.client else "unknown",
             body.code,
         )
+
+    @app.put('/user/clock-backgrounds', include_in_schema=False)
+    def save_clock_backgrounds(request: Request, body: ClockBackgrounds):
+        identity = user(request, True)
+        with backend.monitor.connect() as db:
+            db.execute('UPDATE users SET clock_backgrounds=?,version=version+1 WHERE id=?', (body.enabled,identity['id']))
+        return {'success':True, 'enabled':body.enabled}
 
     @app.get("/user/profile", include_in_schema=False)
     def get_profile(request: Request):

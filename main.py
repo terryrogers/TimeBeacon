@@ -589,6 +589,8 @@ async def private_responses(request,call_next):
 
 from account_api import install as install_accounts
 install_accounts(app, sys.modules[__name__])
+from service_repairs import install as install_service_repairs
+install_service_repairs(app, sys.modules[__name__])
 
 @app.get('/login', include_in_schema=False)
 @app.get('/admin', include_in_schema=False)
