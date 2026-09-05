@@ -35,7 +35,7 @@ def test_repair_dialog_personal_photos_and_panel_layout(system):
         image_url="https://upload.wikimedia.org/test-city.svg",
         source_url="https://commons.wikimedia.org/wiki/File:Test.svg",
     )
-    with sync_playwright() as p, patch(
+    with patch.object(m, 'collect', side_effect=lambda: {**m.latest(), 'services': [{'name': 'chrony.service', 'running': True}]}), sync_playwright() as p, patch(
         "access_api.city_image", return_value=photo
     ), patch(
         "service_repairs.inspect_service",
@@ -86,6 +86,9 @@ def test_repair_dialog_personal_photos_and_panel_layout(system):
         expect(page.locator(".clock-photo-credit").first).to_be_visible()
         page.locator(".clock-photo-credit").first.click()
         expect(page.locator("#city-photo-content")).to_contain_text("Test photographer")
+        expect(page.locator('#city-photo-dialog .window-close')).to_have_css('padding','0px')
+        expect(page.locator('#city-photo-dialog .window-close')).to_have_css('justify-content','center')
+        page.screenshot(path=str(Path(__file__).resolve().parents[1]/'work/city-citation-53.png'),animations='disabled')
         page.get_by_role("button", name="Close photo credit").click()
         page.locator("#service-details-button").click()
         expect(

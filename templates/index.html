@@ -14,7 +14,7 @@
 <body>
 <header class="topbar">
 <div>
-<div class="brand"><img alt="" height="58" src="/static/timebeacon-logo.png" width="58"/><div><h1>TimeBeacon</h1><div class="host-label">{{ hostname }} Server Dashboard</div></div></div>
+<div class="brand"><img alt="" height="58" src="/static/timebeacon-logo.png" width="58"/><div><h1><a href="/" class="brand-home">TimeBeacon</a></h1><div class="host-label">{{ hostname }} Server Dashboard</div></div></div>
 <div class="server-state">
 <span class="status-dot unknown" id="status-dot">
 </span>
@@ -200,7 +200,7 @@
 <summary>
 <h2>
       World Clocks
-     </h2>
+     </h2><a class="world-manage" href="/user-settings#user-clocks">Manage</a>
 </summary>
 
 
@@ -282,7 +282,7 @@
 <a href="/docs">
      API Documentation
     </a>
-<span>© 2026 Terry Rogers · <a href="/static/LICENSE.txt">MIT License</a> · Dashboard {{ dashboard_version }} · API {{ api_version }}</span>
+<span>© 2026 Terry Rogers · <a href="/static/LICENSE.txt">MIT License</a> · Dashboard {{ dashboard_version }} · API {{ api_version }} <a class="github-link" href="https://github.com/terryrogers/TimeBeacon" target="_blank" rel="noopener noreferrer" aria-label="TimeBeacon on GitHub" title="TimeBeacon on GitHub"><i class="github icon" aria-hidden="true"></i></a></span>
 </footer>
 </main>
 
@@ -301,7 +301,7 @@
 <div id="history-details"></div>
 
 </div><div class="window-statusbar"><span id="history-gap"></span><span id="history-count">0 samples</span></div></dialog>
-<script src="/static/access.js?v={{ asset_version }}"></script>
+<script src="/static/client-colours.js?v={{ asset_version }}"></script><script src="/static/access.js?v={{ asset_version }}"></script>
 <script src="/static/app.js?v={{ asset_version }}">
 </script>
 <script src="/static/dashboard.js?v={{ asset_version }}">

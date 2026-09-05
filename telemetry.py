@@ -306,9 +306,15 @@ class Monitor:
                 "errors": errors, "healthy": all(checks.values())}
 
     def sample(self):
-        payload = self.collect()
-        with self.connect() as db:
-            db.execute("INSERT OR REPLACE INTO samples VALUES (?, ?)", (payload["timestamp"], json.dumps(payload)))
+        # Serialise scheduled and administrator-requested samples across workers.
+        with self.database.with_suffix('.sample.lock').open('a') as lock:
+            if os.name != 'nt':
+                import fcntl
+                fcntl.flock(lock, fcntl.LOCK_EX)
+            payload = self.collect()
+            with self.connect() as db:
+                db.execute("INSERT OR REPLACE INTO samples VALUES (?, ?)", (payload["timestamp"], json.dumps(payload)))
+            return payload
 
     def latest(self):
         with self.connect() as db:

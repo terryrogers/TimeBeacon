@@ -136,7 +136,8 @@ def test_authenticated_dashboard_and_admin(system):
         expect(page.locator("#enrollment-qr")).to_be_visible()
         page.get_by_role("button", name="Close registration").click()
         expect(page.locator("#enrollment-secret")).to_be_empty()
-        page.locator("#clock-zone").select_option("UTC")
+        page.locator('#clock-picker input.search').fill('UTC')
+        page.locator('#clock-picker .menu .item[data-value="UTC"]').click()
         page.get_by_role("button", name="Add clock", exact=True).click()
         expect(page.locator("#clock-feedback")).to_have_text(
             "Clock added to your account."

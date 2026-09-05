@@ -176,7 +176,54 @@ def install(app, backend):
                     )
                 outcome = "started"
                 message = "Service started. The status indicator will refresh within 35 seconds."
-            return {"success": True, "message": message}
+            try:
+                fresh = backend.monitor.sample()
+                service = next(
+                    (s for s in fresh.get("services", []) if s["name"] == body.unit),
+                    None,
+                )
+                resolved = (
+                    service is None
+                    if body.action == "remove_check"
+                    else bool(service and service.get("running"))
+                )
+                healthy = bool(fresh.get("healthy"))
+                remaining = [
+                    name.replace("_", " ")
+                    for name, ok in fresh.get("checks", {}).items()
+                    if not ok
+                ]
+                message = (
+                    "Health check removed."
+                    if body.action == "remove_check"
+                    else "Service started."
+                )
+                message += (
+                    " Verified: the service issue is resolved."
+                    if resolved
+                    else " Verification: the service still needs attention."
+                )
+                message += (
+                    " Server health is healthy."
+                    if healthy
+                    else " Server health remains degraded"
+                    + (": " + ", ".join(remaining) if remaining else "")
+                    + "."
+                )
+                return {
+                    "success": True,
+                    "resolved": resolved,
+                    "healthy": healthy,
+                    "timestamp": fresh["timestamp"],
+                    "message": message,
+                }
+            except Exception:
+                return {
+                    "success": True,
+                    "resolved": None,
+                    "healthy": None,
+                    "message": "The service action completed, but a fresh health check could not be collected. Resolution is not yet confirmed; review the service status.",
+                }
         finally:
             with backend.monitor.connect() as db:
                 db.execute(

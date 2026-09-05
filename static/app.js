@@ -739,6 +739,7 @@ async function refreshClients() {
         );
     }
 
+    applyClientColours(payload.colours);
     if(payload.thresholds){WARNING_LAST_SEEN=payload.thresholds.warning_seconds;CRITICAL_LAST_SEEN=payload.thresholds.critical_seconds;WARNING_DROPS=payload.thresholds.warning_drops;CRITICAL_DROPS=payload.thresholds.critical_drops;}
     clients =
         payload.clients || [];

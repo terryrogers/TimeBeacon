@@ -198,13 +198,14 @@ async function confirmServiceRepair() {
     if(repairBusy || !repairPreview?.action)return;
     repairBusy=true;
     const button=document.getElementById("service-repair-confirm"),message=document.getElementById("service-repair-message");
-    button.disabled=true;message.textContent="Applying service action…";
+    button.disabled=true;message.textContent="Applying service action and checking current health…";
     try {
         const {unit,action,config_version}=repairPreview;
         const result=await accessRequest("/administration/services/repair","POST",{unit,action,config_version});
         message.textContent=result.message;document.getElementById("service-action-feedback").textContent=result.message;button.hidden=true;
+        while(refreshing)await new Promise(resolve=>setTimeout(resolve,50));
         await refreshServer();
-    } catch(error) {message.textContent=error.message;button.hidden=true;}
+    } catch(error) {message.textContent=error.message;button.hidden=true;await refreshServer();}
     finally {repairBusy=false;repairPreview=null;}
 }
 function showAcquisition(key) {

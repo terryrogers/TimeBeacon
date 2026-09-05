@@ -122,12 +122,14 @@ def install(app, backend):
         return backend.monitor.latest()
 
     def config():
+        from client_settings import DEFAULT_COLOURS
         result = backend.monitor.get_settings()["settings"].copy()
         result.setdefault("services", list(REQUIRED_SERVICES))
         result.setdefault("warning_seconds", 300)
         result.setdefault("critical_seconds", 900)
         result.setdefault("warning_drops", 1)
         result.setdefault("critical_drops", 10)
+        result.setdefault("client_colours", DEFAULT_COLOURS)
         result.pop("clocks", None)
         return result
 
@@ -538,6 +540,7 @@ def install(app, backend):
         user = who(request, "dashboard.view")
         data = current().get("clients", [])
         out = {
+            "colours": config()['client_colours'],
             "status": "ok",
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "thresholds": {

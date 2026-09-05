@@ -1,5 +1,12 @@
 # Changelog
 
+## Dashboard 5.3.0 / API 4.1.0 — 6 September 2026
+
+- Service Fix now collects and stores a fresh health sample before confirming resolution, distinguishes a repaired service from other remaining health problems, and immediately refreshes the dashboard. Scheduled and requested sampling share a process lock.
+- Dedicated Time Clients administration page for thresholds, foreground/background status colours, and a light/dark palette selector with automatic alternate colours.
+- Searchable Semantic UI clock picker with timezone IDs, location descriptions and country flags from the requested reference list; bundled scripts and flags work without external CDN requests.
+- Centre popup close controls; add dashboard branding links, a GitHub footer link and a World Clocks Manage shortcut. Move the personal photo toggle to the bottom of the clock settings pane.
+
 ## Dashboard 5.2.0 / API 4.1.0 — 5 September 2026
 
 - Administrator Fix controls for degraded monitored services, with a fresh state check and explicit action confirmation. Stopped services can be started; missing or masked services can have an obsolete health check removed without installing or unmasking them. Actions are recorded in SQLite and protected by role checks, same-origin validation and a cooldown.

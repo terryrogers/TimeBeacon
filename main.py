@@ -34,7 +34,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 # ---------------------------------------------------------------------------
 
 BASE_DIR = Path(__file__).resolve().parent
-ASSET_VERSION = hashlib.sha256(b"".join((BASE_DIR / name).read_bytes() for name in ("static/app.js", "static/dashboard.js", "static/app.css", "static/access.js", "static/theme.css", "static/pages.js"))).hexdigest()[:12]
+ASSET_VERSION = hashlib.sha256(b"".join((BASE_DIR / name).read_bytes() for name in ("static/app.js", "static/dashboard.js", "static/app.css", "static/access.js", "static/theme.css", "static/pages.js", "static/clock-picker.js", "static/client-colours.js", "static/timezones.json"))).hexdigest()[:12]
 
 CHRONYC = "/usr/bin/chronyc"
 
@@ -591,12 +591,15 @@ from account_api import install as install_accounts
 install_accounts(app, sys.modules[__name__])
 from service_repairs import install as install_service_repairs
 install_service_repairs(app, sys.modules[__name__])
+from client_settings import install as install_client_settings
+install_client_settings(app, sys.modules[__name__])
 
 @app.get('/login', include_in_schema=False)
 @app.get('/admin', include_in_schema=False)
 @app.get('/admin/users', include_in_schema=False)
 @app.get('/admin/roles', include_in_schema=False)
 @app.get('/admin/services', include_in_schema=False)
+@app.get('/admin/clients', include_in_schema=False)
 @app.get('/user-settings', include_in_schema=False)
 def account_page(request: Request):
     from security import IdentityStore

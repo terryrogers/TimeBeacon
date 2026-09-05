@@ -1,4 +1,5 @@
 import subprocess
+import pytest
 from unittest.mock import patch
 from test_access import system, login, change
 
@@ -7,6 +8,11 @@ URL = "/administration/services/repair"
 STOPPED = {"LoadState": "loaded", "ActiveState": "inactive"}
 MISSING = {"LoadState": "not-found", "ActiveState": "inactive"}
 ACTIVE = {"LoadState": "loaded", "ActiveState": "active"}
+
+@pytest.fixture(autouse=True)
+def synthetic_collection(system, monkeypatch):
+    m, _ = system
+    monkeypatch.setattr(m, 'collect', lambda: {**m.latest(), 'services': [{'name':'chrony.service','running':True}]})
 
 
 def configured(m, services):
