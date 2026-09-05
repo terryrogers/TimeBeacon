@@ -34,7 +34,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 # ---------------------------------------------------------------------------
 
 BASE_DIR = Path(__file__).resolve().parent
-ASSET_VERSION = hashlib.sha256(b"".join((BASE_DIR / name).read_bytes() for name in ("static/app.js", "static/dashboard.js", "static/app.css"))).hexdigest()[:12]
+ASSET_VERSION = hashlib.sha256(b"".join((BASE_DIR / name).read_bytes() for name in ("static/app.js", "static/dashboard.js", "static/app.css", "static/access.js"))).hexdigest()[:12]
 
 CHRONYC = "/usr/bin/chronyc"
 
@@ -62,6 +62,8 @@ limiter = Limiter(
 @asynccontextmanager
 async def lifespan(app):
     monitor.initialise()
+    from security import IdentityStore
+    IdentityStore(monitor).initialise()
     worker = threading.Thread(target=monitor.run, daemon=True)
     worker.start()
     try:
@@ -100,41 +102,6 @@ templates = Jinja2Templates(
 # ---------------------------------------------------------------------------
 # Authentication Handler
 # ---------------------------------------------------------------------------
-
-API_TOKEN = os.environ.get(
-    "NTP_DASHBOARD_API_TOKEN"
-)
-
-if not API_TOKEN:
-    raise RuntimeError(
-        "NTP_DASHBOARD_API_TOKEN is not configured"
-    )
-
-bearer_scheme = HTTPBearer(
-    auto_error=False
-)
-
-
-def require_api_token(
-    credentials: HTTPAuthorizationCredentials = Depends(
-        bearer_scheme
-    ),
-):
-    if (
-        credentials is None
-        or credentials.scheme.lower() != "bearer"
-        or not secrets.compare_digest(
-            credentials.credentials,
-            API_TOKEN,
-        )
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or missing API token",
-            headers={
-                "WWW-Authenticate": "Bearer"
-            },
-        )
 
 # ---------------------------------------------------------------------------
 # Cache
@@ -570,7 +537,7 @@ async def dashboard(
     return templates.TemplateResponse(
         request=request,
         name="index.html",
-        context={"hostname": pretty_hostname(), "asset_version": ASSET_VERSION, "dashboard_version": DASHBOARD_VERSION, "api_version": API_VERSION},
+        context={"hostname": "", "asset_version": ASSET_VERSION, "dashboard_version": DASHBOARD_VERSION, "api_version": API_VERSION},
         headers={"Cache-Control": "no-cache"},
     )
 
@@ -579,377 +546,36 @@ async def dashboard(
 # API
 # ---------------------------------------------------------------------------
 
-@app.get(
-    "/api/time",
-    dependencies=[
-        Depends(require_api_token)
-    ],
-)
-@limiter.limit("10/second")
-async def api_time(
-    request: Request,
-):
-
-    try:
-        result = await asyncio.to_thread(
-            query_ntp_server
-        )
-
-        return {
-            "status": "ok",
-            **result,
-        }
-
-    except Exception as exc:
-        return {
-            "status": "error",
-            "error": str(exc),
-            "timestamp": current_timestamp(),
-        }
-
-@app.get(
-    "/dashboard/time",
-    include_in_schema=False,
-)
-async def dashboard_time():
-
-    try:
-        result = await asyncio.to_thread(
-            query_ntp_server
-        )
-
-        return {
-            "status": "ok",
-            **result,
-        }
-
-    except Exception as exc:
-        return {
-            "status": "error",
-            "error": str(exc),
-            "timestamp": current_timestamp(),
-        }
-
-@app.get(
-    "/api/chrony/tracking",
-    dependencies=[
-        Depends(require_api_token)
-    ],
-)
-@limiter.limit("10/second")
-async def api_time(
-    request: Request,
-):
-
-    try:
-        tracking = await asyncio.to_thread(
-            get_tracking
-        )
-
-        return {
-            "status": "ok",
-            "timestamp": current_timestamp(),
-            "tracking": tracking,
-        }
-
-    except Exception as exc:
-        return {
-            "status": "error",
-            "timestamp": current_timestamp(),
-            "error": str(exc),
-        }
-
-@app.get(
-    "/dashboard/tracking",
-    include_in_schema=False,
-)
-async def dashboard_tracking():
-
-    try:
-        tracking = await asyncio.to_thread(
-            get_tracking
-        )
-
-        return {
-            "status": "ok",
-            "timestamp": current_timestamp(),
-            "tracking": tracking,
-        }
-
-    except Exception as exc:
-        return {
-            "status": "error",
-            "timestamp": current_timestamp(),
-            "error": str(exc),
-        }
-
-@app.get(
-    "/api/chrony/sources",
-    dependencies=[
-        Depends(require_api_token)
-    ],
-)
-@limiter.limit("10/second")
-async def api_time(
-    request: Request,
-):
-
-    try:
-        sources = await asyncio.to_thread(
-            get_sources
-        )
-
-        return {
-            "status": "ok",
-            "timestamp": current_timestamp(),
-            "sources": sources,
-        }
-
-    except Exception as exc:
-        return {
-            "status": "error",
-            "timestamp": current_timestamp(),
-            "error": str(exc),
-        }
-
-@app.get(
-    "/dashboard/sources",
-    include_in_schema=False,
-)
-async def dashboard_sources():
-
-    try:
-        sources = await asyncio.to_thread(
-            get_sources
-        )
-
-        return {
-            "status": "ok",
-            "timestamp": current_timestamp(),
-            "sources": sources,
-        }
-
-    except Exception as exc:
-        return {
-            "status": "error",
-            "timestamp": current_timestamp(),
-            "error": str(exc),
-        }
-
-@app.get(
-    "/api/chrony/clients",
-    dependencies=[
-        Depends(require_api_token)
-    ],
-)
-@limiter.limit("10/second")
-async def api_time(
-    request: Request,
-):
-
-    try:
-        clients = await asyncio.to_thread(
-            get_clients
-        )
-
-        return {
-            "status": "ok",
-            "timestamp": current_timestamp(),
-            "count": len(clients),
-            "clients": clients,
-        }
-
-    except Exception as exc:
-        return {
-            "status": "error",
-            "timestamp": current_timestamp(),
-            "count": 0,
-            "clients": [],
-            "error": str(exc),
-        }
-
-@app.get(
-    "/dashboard/clients",
-    include_in_schema=False,
-)
-async def dashboard_clients():
-
-    try:
-        clients = await asyncio.to_thread(
-            get_clients
-        )
-
-        return {
-            "status": "ok",
-            "timestamp": current_timestamp(),
-            "count": len(clients),
-            "clients": clients,
-        }
-
-    except Exception as exc:
-        return {
-            "status": "error",
-            "error": str(exc),
-        }
-
-@app.get("/health")
-async def health():
-
-    checks = {
-        "chrony": False,
-        "ntp": False,
-    }
-
-    errors = {}
-
-    try:
-        tracking = await asyncio.to_thread(
-            get_tracking
-        )
-
-        checks["chrony"] = True
-
-    except Exception as exc:
-        tracking = {}
-
-        errors["chrony"] = str(
-            exc
-        )
-
-    try:
-        ntp = await asyncio.to_thread(
-            query_ntp_server
-        )
-
-        checks["ntp"] = True
-
-    except Exception as exc:
-        ntp = {}
-
-        errors["ntp"] = str(
-            exc
-        )
-
-    healthy = all(
-        checks.values()
-    )
-
-    result = {
-        "status": (
-            "ok"
-            if healthy
-            else "error"
-        ),
-        "timestamp": current_timestamp(),
-        "checks": checks,
-        "chrony": {
-            "stratum": tracking.get(
-                "Stratum"
-            ),
-            "reference_id": tracking.get(
-                "Reference ID"
-            ),
-            "leap_status": tracking.get(
-                "Leap status"
-            ),
-        },
-        "ntp": {
-            "round_trip_ms": ntp.get(
-                "round_trip_ms"
-            ),
-        },
-    }
-
-    if errors:
-        result["errors"] = errors
-
-    return result
-
-
 monitor = Monitor(get_tracking, query_ntp_server, sources=get_sources, clients=get_clients)
 
 
-@app.get("/dashboard/status", include_in_schema=False)
-async def dashboard_status():
-    return await asyncio.to_thread(monitor.latest)
+# Retire the previous unscoped endpoints; no legacy path may bypass RBAC.
+app.router.routes[:] = [route for route in app.router.routes if not getattr(route,"path","").startswith(("/api/","/dashboard/")) and getattr(route,"path","") != "/health"]
+import sys
+from access_api import install
+install(app,sys.modules[__name__])
+from fastapi.openapi.utils import get_openapi
+def secured_openapi():
+    if app.openapi_schema:return app.openapi_schema
+    schema=get_openapi(title="TimeBeacon API",version=API_VERSION,description="Role-scoped monitoring API. Authenticate using HTTP Basic user credentials or a Bearer API key created in User Settings. Both require API Access and each endpoint's view permission. History defaults to 60 minutes; from/to accept Unix seconds or ISO 8601 dates with timezone. Page arrays using X-Next-After and the returned X-History-From/To headers. CPU/RAM/disk are percent; offset and RTT values are milliseconds. Only /health is public.",routes=app.routes)
+    schema.setdefault("components",{})["securitySchemes"]={"UserCredentials":{"type":"http","scheme":"basic"},"UserAPIKey":{"type":"http","scheme":"bearer"}}
+    for path,operations in schema["paths"].items():
+        for operation in operations.values():
+            if path!="/health":operation["security"]=[{"UserCredentials":[]},{"UserAPIKey":[]}]
+    app.openapi_schema=schema;return schema
+app.openapi=secured_openapi
 
 
-@app.get("/dashboard/history", include_in_schema=False)
-async def dashboard_history(start: int | None = Query(default=None, ge=0), end: int | None = Query(default=None, ge=0)):
-    if start is not None and end is not None and start >= end:
-        raise HTTPException(status_code=422, detail="Start must precede end")
-    return {"samples": await asyncio.to_thread(monitor.history, start, end), "bounds": await asyncio.to_thread(monitor.history_bounds)}
-
-
-@app.get("/dashboard/solar", include_in_schema=False)
-async def dashboard_solar(latitude: float = Query(ge=-90, le=90), longitude: float = Query(ge=-180, le=180)):
-    return solar_status(latitude=latitude, longitude=longitude)
-
-
-from pydantic import BaseModel, Field, field_validator
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
-from urllib.parse import urlsplit
-
-
-class ClockSetting(BaseModel):
-    name: str = Field(min_length=1, max_length=80)
-    zone: str = Field(min_length=1, max_length=100)
-
-    @field_validator("zone")
-    @classmethod
-    def valid_zone(cls, value):
+@app.middleware("http")
+async def private_responses(request,call_next):
+    if request.url.path in ("/docs","/redoc","/openapi.json"):
+        from security import IdentityStore
+        from fastapi.responses import JSONResponse
         try:
-            ZoneInfo(value)
-        except (ZoneInfoNotFoundError, ValueError):
-            raise ValueError("Unknown time zone")
-        return value
-
-
-class DashboardSettingsUpdate(BaseModel):
-    version: int = Field(ge=1)
-    location: str | None = Field(default=None, min_length=1, max_length=80)
-    latitude: float | None = Field(default=None, ge=-90, le=90)
-    longitude: float | None = Field(default=None, ge=-180, le=180)
-    clocks: list[ClockSetting] | None = Field(default=None, max_length=64)
-
-
-@app.get("/dashboard/settings", include_in_schema=False)
-async def dashboard_settings():
-    return await asyncio.to_thread(monitor.get_settings)
-
-
-@app.patch("/dashboard/settings", include_in_schema=False)
-async def update_dashboard_settings(request: Request, changes: DashboardSettingsUpdate):
-    origin = urlsplit(request.headers.get("origin", ""))
-    if request.headers.get("x-dashboard-settings") != "1" or origin.netloc != request.headers.get("host") or request.headers.get("sec-fetch-site") == "cross-site":
-        raise HTTPException(status_code=403, detail="Settings changes must originate from this dashboard")
-    values = changes.model_dump(exclude={"version"}, exclude_none=True)
-    if "clocks" in values and len({clock["zone"] for clock in values["clocks"]}) != len(values["clocks"]):
-        raise HTTPException(status_code=422, detail="Duplicate clocks")
-    saved = await asyncio.to_thread(monitor.save_settings, changes.version, values)
-    if saved is None:
-        raise HTTPException(status_code=409, detail="Settings changed in another browser. Reload and try again.")
-    return saved
-
-
-@app.get("/api/dashboard", dependencies=[Depends(require_api_token)], tags=["Dashboard"])
-async def api_dashboard():
-    """All current dashboard data, shared clock/location settings and daylight state."""
-    status,settings,clients,ntp=await asyncio.gather(dashboard_status(),dashboard_settings(),dashboard_clients(),dashboard_time())
-    preferences=settings["settings"]
-    return {"dashboard_version":DASHBOARD_VERSION,"api_version":API_VERSION,"status":status,"settings":settings,"clients":clients,"time":ntp,"solar":solar_status(latitude=preferences["latitude"],longitude=preferences["longitude"])}
-
-
-@app.get("/api/history", dependencies=[Depends(require_api_token)], tags=["History"])
-async def api_history(start: int | None=Query(None,ge=0),end: int | None=Query(None,ge=0),after: int=Query(-1,ge=-1),limit: int=Query(1000,ge=1,le=5000)):
-    """Export unmodified stored telemetry including GPS, satellites, PPS, acquisition, services and metrics.
-
-    Defaults to the last 60 minutes. Use start=0 for all recorded time.
-    Follow next_after with the returned start/end to page through the same fixed period.
-    Older records may omit fields that were not yet collected; no values are invented.
-    """
-    end=int(time.time()) if end is None else end
-    start=max(0,end-3600) if start is None else start
-    if start>=end:raise HTTPException(422,"Start must precede end")
-    result=await asyncio.to_thread(monitor.export_history,start,end,after,limit)
-    return {"start":start,"end":end,"bounds":await asyncio.to_thread(monitor.history_bounds),**result}
+            IdentityStore(monitor).authenticate(request,api=True)
+        except HTTPException as error:
+            return JSONResponse({"detail":error.detail},status_code=error.status_code,headers={**(error.headers or {}),"Cache-Control":"no-store"})
+    response=await call_next(request)
+    if not request.url.path.startswith("/static/"):
+        response.headers["Cache-Control"]="no-store"
+    return response

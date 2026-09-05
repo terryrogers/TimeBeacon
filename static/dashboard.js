@@ -20,11 +20,12 @@ async function refreshServer() {
         const used=data.metrics?.storage_used, percent=data.metrics?.storage;
         document.getElementById("system-storage").textContent=!data.stale && Number.isFinite(used) && Number.isFinite(percent) ? `${(used/1e9).toFixed(1)} GB (${percent.toFixed(1)}%)` : "Unavailable";
         document.getElementById("time-server-heading").textContent=(data.time_daemon && !data.time_daemon.startsWith("Time Server") ? data.time_daemon+" " : "")+"Time Server Status";
+        document.querySelector(".host-label").textContent=(data.hostname || "")+" Server Dashboard";
         acquisitionData=data; renderAcquisition();
         const uptime = data.metrics?.uptime;
         document.getElementById("system-uptime").textContent = Number.isFinite(uptime) && !data.stale ? `${Math.floor(uptime/86400)}d ${Math.floor(uptime%86400/3600)}h` : "Unavailable";
         renderServiceDetails(data);
-        await Promise.all([refreshTracking(),refreshClients()]);
+        await Promise.all([can("time.view") ? refreshTracking() : Promise.resolve(),refreshClients()]);
         hideError();
     } catch(error) {
         showError(error.message);
@@ -38,33 +39,7 @@ async function configureTheme() {
         document.getElementById("solar-summary").textContent=settings.location+" · "+(solar.theme === "dark" ? "Night" : "Daylight");
     } catch { document.getElementById("solar-summary").textContent="Daylight calculation unavailable"; }
 }
-let settingsEditVersion=0;
-function configureSettings() {
-    const dialog=document.getElementById("settings-dialog");
-    document.getElementById("settings-button").addEventListener("click", () => {
-        for(const key of ["location","latitude","longitude"]) document.getElementById("setting-"+key).value=settings[key];
-        settingsEditVersion=sharedVersion;
-        dialog.showModal();
-    });
-    document.getElementById("use-location").addEventListener("click", () => {
-        const feedback=document.getElementById("settings-feedback");
-        if(!navigator.geolocation) {feedback.textContent="Location access unavailable; enter coordinates."; return;}
-        feedback.textContent="Waiting for location permission…";
-        navigator.geolocation.getCurrentPosition(position => {
-            document.getElementById("setting-latitude").value=position.coords.latitude.toFixed(4);
-            document.getElementById("setting-longitude").value=position.coords.longitude.toFixed(4);
-            document.getElementById("setting-location").value="My location";
-            feedback.textContent="Location ready. Select Save settings to apply.";
-        }, () => {feedback.textContent="Could not obtain location. Enter latitude and longitude manually.";}, {timeout:10000});
-    });
-    document.getElementById("settings-form").addEventListener("submit", async event => {
-        event.preventDefault();
-        const changes={location:document.getElementById("setting-location").value.trim(),latitude:Number(document.getElementById("setting-latitude").value),longitude:Number(document.getElementById("setting-longitude").value)};
-        try {await saveSharedSettings(changes,settingsEditVersion);settingsEditVersion=sharedVersion;document.getElementById("settings-feedback").textContent="Settings saved for all browsers.";}
-        catch(error){document.getElementById("settings-feedback").textContent=error.message;}
-
-    });
-}
+function configureSettings() {}
 function configureClocks() {
     const zones=[...new Set(["UTC", ...(Intl.supportedValuesOf ? Intl.supportedValuesOf("timeZone") : DEFAULT_TIMEZONES.map(item => item.zone))])];
     const cityLabel=zone => zone === "UTC" ? "UTC (Coordinated Universal Time)" : zone.split("/").slice(1).join(" / ").replaceAll("_"," ")+" — "+zone.split("/")[0];
@@ -80,7 +55,7 @@ function configureClocks() {
         if(TIMEZONES.some(item => item.zone === zone)) {feedback.textContent="That clock is already added."; return;}
         try {
             await saveSharedSettings({clocks:[...TIMEZONES,{zone,name:zone.split("/").pop().replaceAll("_"," ")}]});
-            input.value="";feedback.textContent="Clock added for all browsers.";
+            input.value="";feedback.textContent="Clock added to your account.";
         } catch(error) {feedback.textContent=error.message;}
 
     });
@@ -110,6 +85,7 @@ function configureGraphs() {
 let graphKey=null, graphStart=0, graphEnd=0, graphBounds={}, graphRequest=0, graphPreset="60";
 function localInput(seconds) {const date=new Date(seconds*1000);return new Date(date-date.getTimezoneOffset()*60000).toISOString().slice(0,16);}
 async function showGraph(key, reset=true) {
+    if(!can(["cpu","ram","storage","temperature","uptime"].includes(key) ? "server.history" : "time.history"))return;
     graphKey=key;
     if(reset) {graphPreset="60";graphEnd=Math.floor(Date.now()/1000);graphStart=graphEnd-3600;}
     document.getElementById("history-start").value=localInput(graphStart);
@@ -118,11 +94,11 @@ async function showGraph(key, reset=true) {
     const requestId=++graphRequest;
     const dialog=document.getElementById("history-dialog"), graph=document.getElementById("history-graph");
     const message=document.getElementById("history-message"), [label,unit]=GRAPH_METRICS[key];
-    document.getElementById("history-title").textContent=label+" · "+graphDate(graphStart*1000)+" – "+graphDate(graphEnd*1000);
-    graph.replaceChildren(); document.getElementById("history-details").replaceChildren(); message.textContent="Loading history…";
+    document.getElementById("history-title").textContent="Historic "+(key==="cpu" ? "CPU Usage" : label);
+    graph.replaceChildren(); document.getElementById("history-details").replaceChildren(); message.textContent="Loading history…";document.getElementById("history-gap").textContent="";document.getElementById("history-count").textContent="0 samples";
     if(!dialog.open) dialog.showModal();
     try {
-        const payload=await fetchJson(`/dashboard/history?start=${graphStart}&end=${graphEnd}`),end=graphEnd,start=graphStart;
+        const payload=await fetchJson(`/dashboard/history?metric=${encodeURIComponent(key)}&start=${graphStart}&end=${graphEnd}`),end=graphEnd,start=graphStart;
         if(requestId!==graphRequest)return;
         graphBounds=payload.bounds || {};
         if(key.startsWith("gps_") || ["last_offset","rms_offset","ntp_rtt"].includes(key)) {
@@ -135,7 +111,7 @@ async function showGraph(key, reset=true) {
             document.getElementById("history-details").append(heading,dataTable(["Time","Selected source","GPS fix","Used","Visible","PPS"],rows));
         }
         const samples=payload.samples.filter(s => s.timestamp>=start && Number.isFinite(s.metrics[key]));
-        if(!samples.length) {message.textContent="No samples yet. History accumulates while the server runs."; return;}
+        if(!samples.length) {message.textContent="No samples available for this period."; document.getElementById("history-gap").textContent="Gaps indicate unavailable data."; return;}
         const values=samples.map(s => s.metrics[key]); let low=Math.min(...values), high=Math.max(...values);
         const margin=(high-low)*0.1 || 1; low-=margin; high+=margin;
         const svg=(name,attrs,text) => {const el=document.createElementNS("http://www.w3.org/2000/svg",name); for(const [k,v] of Object.entries(attrs)) el.setAttribute(k,v); if(text) el.textContent=text; graph.append(el); return el;};
@@ -145,14 +121,20 @@ async function showGraph(key, reset=true) {
             svg("text",{x:80,y:y+5,"text-anchor":"end",fill:"var(--text)","font-size":12},(high-(high-low)*i/4).toFixed(2)+" "+unit);
             svg("text",{x:90+i*197.5,y:305,"text-anchor":i===0?"start":i===4?"end":"middle",fill:"var(--text)","font-size":12},graphTime((start+i*(end-start)/4)*1000));
         }
-        let path="",previous=null;
+        let path="",previous=null,missingGap=false;
+        const missing=payload.samples.filter(s=>!Number.isFinite(s.metrics[key])).map(s=>s.timestamp);
         for(const sample of samples) {
             const x=90+(sample.timestamp-start)/(end-start)*790,y=265-(sample.metrics[key]-low)/(high-low)*240;
-            path+=(previous===null || sample.timestamp-previous>Math.max(90,(end-start)/1500*3) ? "M":"L")+x+","+y+" "; previous=sample.timestamp;
+            const unavailable=previous!==null && missing.some(t=>t>previous && t<sample.timestamp);missingGap ||= unavailable;
+            path+=(previous===null || unavailable || sample.timestamp-previous>Math.max(90,(end-start)/1500*3) ? "M":"L")+x+","+y+" "; previous=sample.timestamp;
             if(samples.length===1) svg("circle",{cx:x,cy:y,r:4,fill:"var(--blue)"});
         }
         svg("path",{d:path,fill:"none",stroke:"var(--blue)","stroke-width":2});
-        message.textContent=`${samples.length} samples · ${graphDate(samples[0].timestamp*1000)} to ${graphDate(samples.at(-1).timestamp*1000)}. Gaps indicate unavailable data.`;
+        message.textContent="";
+        document.getElementById("history-count").textContent=samples.length+" samples";
+        const gapLimit=Math.max(90,(end-start)/1500*3);
+        const hasGaps=missingGap || samples[0].timestamp-start>gapLimit || end-samples.at(-1).timestamp>gapLimit || samples.some((s,i)=>i>0 && s.timestamp-samples[i-1].timestamp>gapLimit);
+        document.getElementById("history-gap").textContent=hasGaps ? "Gaps indicate unavailable data." : "";
     } catch {message.textContent="History unavailable. Close and try again.";}
 }
 
@@ -215,15 +197,15 @@ function configureAcquisition() {
     document.querySelectorAll("[data-acquisition]").forEach(card=>card.addEventListener("click",()=>showAcquisition(card.dataset.acquisition)));
 }
 
-let sharedVersion=0;
+let sharedVersion=0, sharedConfigVersion=0;
 function applySharedSettings(payload) {
-    sharedVersion=payload.version;
+    sharedVersion=payload.version;sharedConfigVersion=payload.config_version || 0;
     settings={location:payload.settings.location,latitude:payload.settings.latitude,longitude:payload.settings.longitude};
     TIMEZONES=payload.settings.clocks;
-    buildClocks();updateClocks();configureTheme();
+    buildClocks();updateClocks();configureTheme();renderClockSettings();
 }
 async function loadSharedSettings() {
-    try {const payload=await fetchJson("/dashboard/settings");if(payload.version!==sharedVersion)applySharedSettings(payload);}
+    try {const payload=await fetchJson("/dashboard/settings");if(payload.version!==sharedVersion || (payload.config_version || 0)!==sharedConfigVersion)applySharedSettings(payload);}
     catch(error) {showError("Shared settings unavailable: "+error.message);}
 }
 async function saveSharedSettings(changes,version=sharedVersion) {

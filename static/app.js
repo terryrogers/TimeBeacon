@@ -7,10 +7,11 @@ const REFRESH_INTERVAL = 5000;
 
 const NTP_SYNC_INTERVAL = 30000;
 
-const WARNING_LAST_SEEN =
+let WARNING_DROPS=1, CRITICAL_DROPS=10;
+let WARNING_LAST_SEEN =
     10 * 60;
 
-const CRITICAL_LAST_SEEN =
+let CRITICAL_LAST_SEEN =
     60 * 60;
 
 
@@ -259,7 +260,7 @@ function severity(client) {
     }
 
     if (
-        drops >= 10 ||
+        drops >= CRITICAL_DROPS ||
         last >=
             CRITICAL_LAST_SEEN
     ) {
@@ -267,7 +268,7 @@ function severity(client) {
     }
 
     if (
-        drops > 0 ||
+        drops >= WARNING_DROPS ||
         last >=
             WARNING_LAST_SEEN
     ) {
@@ -738,6 +739,7 @@ async function refreshClients() {
         );
     }
 
+    if(payload.thresholds){WARNING_LAST_SEEN=payload.thresholds.warning_seconds;CRITICAL_LAST_SEEN=payload.thresholds.critical_seconds;WARNING_DROPS=payload.thresholds.warning_drops;CRITICAL_DROPS=payload.thresholds.critical_drops;}
     clients =
         payload.clients || [];
 
@@ -749,6 +751,10 @@ async function refreshClients() {
         ).toLocaleString();
 
     renderClients();
+    if(payload.summary) {
+        const ids={total_clients_seen:"clients-count",total_healthy:"count-ok",total_warning:"count-warning",total_critical:"count-critical",total_unknown:"count-unknown"};
+        for(const [key,id] of Object.entries(ids))document.getElementById(id).textContent=payload.summary[key];
+    }
 }
 
 
@@ -871,7 +877,7 @@ function buildClocks() {
                     catch(error){document.getElementById("clock-feedback").textContent=error.message;remove.disabled=false;}
                 });
                 const offset=document.createElement("div"); offset.className="clock-offset";
-                offset.dataset.offsetZone=item.zone; card.append(offset,remove);
+                offset.dataset.offsetZone=item.zone; card.append(offset);
                 return card;
             }
         )
@@ -964,6 +970,7 @@ document.addEventListener(
     "DOMContentLoaded",
     async () => {
 
+        if(!await authenticateDashboard())return;
         await loadSharedSettings();
         setInterval(loadSharedSettings,30000);
         configureTheme();
@@ -991,7 +998,7 @@ document.addEventListener(
         );
 
         try {
-            await synchroniseNtpClock();
+            if(can("time.view") || can("clocks.view") || can("clocks.amend"))await synchroniseNtpClock();
         }
         catch (error) {
             showError(
@@ -1016,7 +1023,7 @@ document.addEventListener(
         setInterval(
             async () => {
                 try {
-                    await synchroniseNtpClock();
+                    if(can("time.view") || can("clocks.view") || can("clocks.amend"))await synchroniseNtpClock();
                 }
                 catch (error) {
                     showError(

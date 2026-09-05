@@ -79,10 +79,11 @@ def system_metrics():
 _service_cpu = {}
 
 
-def service_status():
+def service_status(required_services=None):
+    required_services = REQUIRED_SERVICES if required_services is None else tuple(required_services)
     properties = "Id,Description,ActiveState,SubState,UnitFileState,CPUUsageNSec,MemoryCurrent,ControlGroup"
     try:
-        output = command("systemctl", "show", *REQUIRED_SERVICES, "-p", properties)
+        output = command("systemctl", "show", *required_services, "-p", properties)
         units = {}
         for block in output.split("\n\n"):
             values = dict(line.split("=", 1) for line in block.splitlines() if "=" in line)
@@ -92,7 +93,7 @@ def service_status():
         units = {}
     results = []
     now = time.monotonic()
-    for name in REQUIRED_SERVICES:
+    for name in required_services:
         values = units.get(name, {})
         state = values.get("ActiveState", "unknown")
         cpu = None
@@ -260,8 +261,9 @@ class Monitor:
         except Exception:
             checks["system_metrics"] = False
             errors.append("System metrics unavailable")
-        services, failed = service_status()
+        services, failed = service_status(self.get_settings()["settings"].get("services"))
         checks["required_services"] = bool(services) and all(item["running"] for item in services)
+        failed = [name for name in failed if name in self.get_settings()["settings"].get("services", REQUIRED_SERVICES) or name == "Service checks unavailable"]
         checks["no_failed_services"] = not failed
         try:
             tracking = self.tracking()

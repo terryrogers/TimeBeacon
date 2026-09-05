@@ -1,24 +1,29 @@
 # TimeBeacon
 
-Precision-time monitoring dashboard for Linux NTP/Chrony servers with GPSD reception, PPS, service health, system metrics, time clients and world clocks.
+Precision-time monitoring for Linux NTP/Chrony servers: system metrics, service health, GPS/PPS reception, time acquisition, time clients and personal world clocks.
 
-Dashboard 3.0.0 · API 2.1.0 · Copyright (c) 2026 Terry Rogers · MIT License.
+Dashboard **4.0.0** · API **3.0.0** · Copyright (c) 2026 Terry Rogers · MIT License.
 
-## Run
+## Setup
 
-Install requirements.txt in a Python virtual environment. Set NTP_DASHBOARD_API_TOKEN using a protected environment file, then run `uvicorn main:app --host 127.0.0.1 --port 8080`. The Linux collector uses chronyc, gpspipe, nslookup, systemd and psutil. Configure narrowly scoped sudo access for service inspection where necessary. Never expose an API token in source control.
+Install requirements.txt in a Python virtual environment and run `uvicorn main:app --host 127.0.0.1 --port 8080` behind an HTTPS reverse proxy. Browser sessions use Secure, HttpOnly, SameSite cookies and require HTTPS. The Linux collector uses chronyc, gpspipe, nslookup, systemd and psutil. Service queries only read state; changing the health-check list never starts or stops services.
 
-SQLite defaults to data/history.sqlite3; NTP_DASHBOARD_HISTORY_DB can override it. Back up the database with SQLite online backup. Raw history is retained indefinitely, so monitor disk capacity. Settings are shared across browsers.
+On a new identity database, the requested bootstrap account is admin with password admin. Change its password in User Settings. New account passwords must contain at least eight characters. Passwords are salted PBKDF2 hashes; API keys and session tokens are stored as hashes. Password changes revoke that user's sessions and API keys.
+
+SQLite defaults to data/history.sqlite3; NTP_DASHBOARD_HISTORY_DB can override it. Back up SQLite using its online backup interface. Raw samples are retained indefinitely. Upgrades migrate existing shared world clocks into the initial administrator's personal settings; new users start with no clocks. Location, health checks and client thresholds remain administration settings.
+
+## Access control
+
+Administration creates/updates users and roles, assigns multiple roles to users, disables accounts, resets passwords, and configures health checks and client thresholds. Permissions are the union of the user's roles and are evaluated on each request. At least one enabled administrator must remain. User Settings manages personal clocks, password and API keys. Keys inherit current account permissions and can be revoked individually.
+
+The built-in User role grants dashboard, server/time status and history, world-clock viewing and time-client summaries. It cannot access Administration, individual clients, clock amendments or the API unless a configured role grants those permissions. Controls are hidden in the UI and the server independently denies unauthorized requests.
 
 ## API
 
-Interactive OpenAPI documentation is at /docs. Existing /api/time and /api/chrony/* routes remain available. API requests require the configured Bearer token.
+See [API reference](docs/API.md) and the instance's /docs OpenAPI interface. Authenticate with HTTP Basic user credentials or a Bearer API key created in User Settings. Every protected API endpoint requires API Access plus its listed view/amend permission. The old environment-token authentication and /api/* endpoints are retired. Only /health exposes unauthenticated monitoring data; /docs and /openapi.json also require API Access.
 
-- GET /api/dashboard: all current status, GPS/satellites/PPS/acquisition, services, clients, NTP time, shared settings and solar state.
-- GET /api/history: original collected samples, defaulting to the last 60 minutes. Optional start/end are Unix timestamps in seconds. start=0 selects all stored time. limit defaults to 1000, maximum 5000. Follow next_after as after, preserving returned start/end, until next_after is null.
-
-Dashboard graphs use representative samples for long periods; the API history export preserves every original sample. GPS and acquisition fields are available wherever previously collected; older records may omit newer fields. World clock displays are calculated from NTP time and shared timezone settings.
+History defaults to the last 60 minutes. Dates accept Unix seconds or ISO 8601 with an explicit timezone. API arrays contain original samples with bounded pagination; graph displays select representative samples for long periods. Null values and gaps represent unavailable measurements.
 
 ## Development
 
-Run `python -m pytest -q`. Tests require pytest, Playwright with Edge, httpx and the runtime requirements. Version constants are in version.py; changes are recorded in CHANGELOG.md. Deployment and publishing are separate from local test validation.
+Run `python -m pytest -q`. Tests require pytest, Playwright with Edge, httpx and runtime dependencies. Version constants are in version.py; changes are recorded in CHANGELOG.md. Source control excludes databases, credentials, local deployment records and generated test evidence. Local tests, deployed service checks and user acceptance are separate verification stages.

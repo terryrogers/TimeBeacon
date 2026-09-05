@@ -35,14 +35,16 @@
      </span>
     </label>
     <button id="settings-button" type="button">
-     Settings
+     Administration
     </button>
+    <button id="user-settings-button" type="button">User Settings</button>
+    <button id="logout-button" type="button">Sign out</button>
     <span class="muted" id="solar-summary">
      Automatic daylight theme
     </span>
    </div>
   </header>
-  <main>
+  <main hidden>
    <div class="error-banner hidden" id="error-banner">
    </div>
    <div id="health-message" role="status">
@@ -288,54 +290,12 @@
     <span>© 2026 Terry Rogers · <a href="/static/LICENSE.txt">MIT License</a> · Dashboard {{ dashboard_version }} · API {{ api_version }}</span>
    </footer>
   </main>
-  <dialog aria-labelledby="settings-title" id="settings-dialog">
-   <form method="dialog">
-    <button aria-label="Close settings">
-     Close
-    </button>
-   </form>
-   <h2 id="settings-title">
-    Dashboard Settings
-   </h2>
-   <p>
-    Preferences are saved on the server and shared across all browsers. Light and dark mode follow sunrise and sunset at your chosen location.
-   </p>
-   <form id="settings-form">
-    <label>
-     Location name
-     <input id="setting-location" maxlength="80" required=""/>
-    </label>
-    <label>
-     Latitude
-     <input id="setting-latitude" max="90" min="-90" required="" step="any" type="number"/>
-    </label>
-    <label>
-     Longitude
-     <input id="setting-longitude" max="180" min="-180" required="" step="any" type="number"/>
-    </label>
-    <button id="use-location" type="button">
-     Use my location
-    </button>
-    <p id="settings-feedback" role="status">
-    </p>
-    <button type="submit">
-     Save settings
-    </button>
-    <p>
-     Manage clocks using Add clock and Remove in the World Clocks panel.
-    </p>
-   </form>
-  </dialog>
+  <dialog id="login-dialog" aria-labelledby="login-title"><h2 id="login-title">Sign in to TimeBeacon</h2><form id="login-form"><label>Username<input name="username" autocomplete="username" required/></label><label>Password<input name="password" type="password" autocomplete="current-password" required/></label><p id="login-feedback" role="status"></p><button>Sign in</button></form></dialog>
+  <dialog id="user-dialog" aria-labelledby="user-title"><form method="dialog"><button aria-label="Close user settings">×</button></form><h2 id="user-title">User Settings</h2><p id="user-identity"></p><section id="user-clocks"><h3>My world clocks</h3><div id="clock-settings-list"></div></section><h3>Change password</h3><form id="password-form"><label>Current password<input name="current_password" type="password" autocomplete="current-password" required/></label><label>New password<input name="new_password" type="password" minlength="8" maxlength="256" autocomplete="new-password" required/></label><button>Change password</button></form><section id="key-section"><h3>My API keys</h3><p>Keys inherit your account's current permissions.</p><div id="key-list"></div><form id="key-form"><label>Key name<input name="name" maxlength="80" required/></label><button>Create API key</button></form><output id="new-key"></output></section><p id="user-feedback" role="status"></p></dialog>
+  <dialog id="admin-dialog" aria-labelledby="admin-title"><form method="dialog"><button aria-label="Close administration">×</button></form><h2 id="admin-title">Administration</h2><p id="admin-feedback" role="status"></p><details open><summary>Users</summary><div id="admin-users"></div><form id="admin-user-form"><input name="id" type="hidden"/><label>Username<input name="username" pattern="[A-Za-z0-9_.@-]{1,80}" required/></label><label>Password (required for new users; leave empty to keep)<input name="password" type="password" minlength="8" maxlength="256" autocomplete="new-password"/></label><label><input name="enabled" type="checkbox" checked/>Account enabled</label><fieldset id="user-roles"><legend>Roles</legend></fieldset><button>Save user</button><button id="new-user" type="button">New user</button></form></details><details><summary>Roles</summary><div id="admin-roles"></div><form id="admin-role-form"><label>Role name<input name="name" maxlength="80" required/></label><fieldset id="role-permissions"><legend>Permissions</legend></fieldset><button>Save role</button></form></details><details><summary>Health checks, thresholds and daylight location</summary><form id="admin-config-form"><label>Systemd services to check (one per line)<textarea name="services" rows="7" required></textarea></label><label>Client warning after (seconds)<input name="warning_seconds" type="number" min="1" required/></label><label>Client critical after (seconds)<input name="critical_seconds" type="number" min="2" required/></label><label>Dropped packets warning threshold<input name="warning_drops" type="number" min="1" required/></label><label>Dropped packets critical threshold<input name="critical_drops" type="number" min="2" required/></label><label>Location<input name="location" required/></label><label>Latitude<input name="latitude" type="number" step="any" min="-90" max="90" required/></label><label>Longitude<input name="longitude" type="number" step="any" min="-180" max="180" required/></label><button>Save configuration</button></form></details></dialog>
   <dialog aria-labelledby="history-title" id="history-dialog">
-   <form method="dialog">
-    <button aria-label="Close graph">
-     Close
-    </button>
-   </form>
-   <h2 id="history-title">
-   </h2>
-   <p id="history-message" role="status">
-   </p>
+   <div class="window-titlebar"><h2 id="history-title"></h2><form method="dialog"><button aria-label="Close graph" class="window-close">×</button></form></div>
+   <p id="history-message" role="status"></p>
    <svg aria-label="Selected history period" id="history-graph" role="img" viewbox="0 0 900 320">
    </svg>
    <div class="history-controls-scroll"><div class="history-controls">
@@ -344,8 +304,10 @@
     <label>To <input id="history-end" type="datetime-local"/></label>
    </div></div>
    <div id="history-details"></div>
+   <div class="window-statusbar"><span id="history-gap"></span><span id="history-count">0 samples</span></div>
 
   </dialog>
+  <script src="/static/access.js?v={{ asset_version }}"></script>
   <script src="/static/app.js?v={{ asset_version }}">
   </script>
   <script src="/static/dashboard.js?v={{ asset_version }}">
