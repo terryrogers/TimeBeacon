@@ -50,6 +50,13 @@ def test_authenticated_dashboard_and_admin(system):
         page.wait_for_function(
             "document.getElementById('server-status')?.textContent==='Server Online'"
         )
+        expect(page.locator('#operating-system')).to_have_text('Debian GNU/Linux 13 (trixie, 64-bit)')
+        expect(page.locator('#hardware-details')).to_have_text('Raspberry Pi 5 (2.4 GHz Quad-Core, 16 GB RAM, 256 GB NVMe)')
+        assert page.locator('#system-information').bounding_box()['y'] < page.locator('[data-history=cpu]').bounding_box()['y']
+        page.set_viewport_size({'width':390,'height':844})
+        assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+        page.screenshot(path=str(root/'work/system-information-mobile.png'),full_page=True,animations='disabled')
+        page.set_viewport_size({'width':1440,'height':1000})
         page.screenshot(
             path=str(root / "work/semantic-dashboard-light.png"),
             full_page=True,

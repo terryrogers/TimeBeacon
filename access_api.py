@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field, field_validator, ConfigDict
 from security import IdentityStore, PERMISSIONS, digest, password_hash, password_ok
 from telemetry import REQUIRED_SERVICES, solar_status
 from account_api import ProfileInput, profile
+from server_info import system_information
 
 
 class Login(BaseModel):
@@ -205,6 +206,7 @@ def install(app, backend):
         out["metrics"] = {}
         out["checks"] = {}
         if "server.view" in user["permissions"]:
+            out["system_information"] = system_information()
             out.update(
                 {
                     k: data.get(k)
@@ -594,6 +596,7 @@ def install(app, backend):
         used = m.get("storage_used")
         return {
             "cpu_percent": m.get("cpu"),
+            "system_information": system_information(),
             "ram_percent": m.get("ram"),
             "disk_used": {
                 "percent": m.get("storage"),

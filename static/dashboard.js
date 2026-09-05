@@ -10,6 +10,8 @@ async function refreshServer() {
     refreshing = true;
     try {
         const data = await fetchJson("/dashboard/status");
+        document.getElementById("operating-system").textContent = data.system_information?.operating_system || "Unavailable";
+        document.getElementById("hardware-details").textContent = data.system_information?.hardware || "Unavailable";
         setServerStatus(data.healthy ? "ok" : "error", data.healthy ? "Server Online" : "Server Needs Attention");
         const failed = Object.entries(data.checks || {}).filter(([,ok]) => !ok).map(([name]) => name.replaceAll("_"," "));
         document.getElementById("health-message").textContent = data.stale ? "Monitoring data is stale or still starting." : failed.length ? "Check: "+failed.join(", ") : "";

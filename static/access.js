@@ -24,6 +24,7 @@ async function authenticateDashboard() {
     document.querySelector("main").hidden=!can("dashboard.view");
     if(!can("dashboard.view")){document.getElementById("server-status").textContent="Dashboard access not granted";return false;}
     document.getElementById("system-cpu").closest("section").hidden=!can("server.view");
+    document.getElementById("system-information").hidden=!can("server.view");
     document.getElementById("time-server-heading").closest("section").hidden=!can("time.view");
     document.querySelector('[data-acquisition="fix"]').closest("section").hidden=!can("time.view");
     document.getElementById("world-panel").hidden=!can("clocks.view");

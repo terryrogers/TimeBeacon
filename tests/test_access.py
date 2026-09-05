@@ -70,7 +70,10 @@ def system(tmp_path):
             )
     with patch.object(main, "monitor", m), patch.object(
         main, "query_ntp_server", return_value={"timestamp": now, "round_trip_ms": 1}
-    ):
+    ), patch("access_api.system_information", return_value={
+        "operating_system": "Debian GNU/Linux 13 (trixie, 64-bit)",
+        "hardware": "Raspberry Pi 5 (2.4 GHz Quad-Core, 16 GB RAM, 256 GB NVMe)",
+    }):
         yield m, TestClient(main.app, base_url="https://testserver")
 
 

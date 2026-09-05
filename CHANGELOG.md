@@ -1,5 +1,11 @@
 # Changelog
 
+## Dashboard 5.1.0 / API 4.1.0 — prepared
+
+- Add detected operating system and hardware details above Server Status.
+- Include the same structured inventory in server-status API responses, restricted by Server Status viewing permission. Hardware summaries show maximum CPU frequency, physical cores, nominal RAM and the capacity/type of disks backing the operating system.
+
+
 ## Dashboard 5.0.0 / API 4.0.0 — 5 September 2026
 
 - Semantic UI components with new Daylight and Midnight themes, bundled styles and icon fonts.

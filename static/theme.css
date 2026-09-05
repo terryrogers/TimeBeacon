@@ -16,3 +16,5 @@ dialog.ui.modal.window{position:fixed;inset:0;width:min(1000px,94vw);max-width:9
 dialog.ui.modal.window{height:fit-content}.history-controls{min-width:100%;width:max-content}.window-titlebar h2{padding:0}.window-titlebar form{align-self:center}.ui.segment.client-card,.ui.segment.clock-card{margin:0}.ui.segment.client-card{padding:0;overflow:hidden}.ui.segment.clock-card{padding:1.3rem}
 
 .metric.ui.segment{background:var(--panel)}
+
+.system-information.ui.segment{padding:1.2rem 1.5rem}.system-information dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:.55rem 1rem;margin:0;font-size:.95rem}.system-information dt{font-weight:650;color:var(--muted)}.system-information dd{margin:0;overflow-wrap:anywhere}@media(max-width:600px){.system-information dl{grid-template-columns:1fr;gap:.25rem}.system-information dd+dt{margin-top:.5rem}}

@@ -1,4 +1,4 @@
-# TimeBeacon API 4.0
+# TimeBeacon API 4.1
 
 Use HTTPS. Authenticate with `Authorization: Bearer <your-user-api-key>` or sign in through the browser form and use its session cookie. HTTP Basic credentials are no longer accepted. Keys are created and revoked in User Settings, never in Administration on behalf of another user. Both methods require `api.view`, and all requests recheck account enablement and current role permissions. Browser sessions are also accepted for same-origin use with the same API permission checks. POST clock mutations accept JSON; session-cookie requests must include the matching Origin header.
 
@@ -38,3 +38,5 @@ Example path: `/server/status/history?parameter=cpu&from=2026-09-05T10:00:00Z&to
 ## Migration from API 2
 
 Old /api/* paths and the single NTP_DASHBOARD_API_TOKEN no longer grant access. Create a user with the required roles, then use its credentials or a personal API key. The database migration preserves samples, moves the previous global clocks to the bootstrap administrator, and adds identity tables. New users' clocks are independent. Health-service selections and both last-seen and dropped-packet thresholds are edited in Administration.
+
+`/server/status` also includes `system_information`: operating-system and hardware descriptions, model, architecture bits, physical CPU cores, maximum CPU GHz, usable RAM bytes and root-disk storage objects (size in bytes, type and description). Inventory is detected read-only and cached for five minutes. Displayed RAM is rounded to nominal GB; drive capacities use decimal GB for the whole disk, not the filesystem. Unsupported measurements are null or omitted from the friendly description.
