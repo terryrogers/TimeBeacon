@@ -6,6 +6,7 @@
 - Keep administration menu text readable on hover in both themes; use title case for Roles & Permissions, Configured Roles, Role Permissions, Service Health and Monitored Services.
 - Replace service-name entry with Available Services and Monitored Services lists, transfer arrows and an administrator-only system service inventory.
 - Require Name, Username and Email Address for new accounts, enforce one selected role, and default Account Enabled to off. Preserve existing accounts during deployment.
+- Deployed after 36 local tests. Verified installed files, public assets and live service inventory as the application user. Health remains healthy; accounts, settings and history were preserved. Only the dashboard restarted.
 
 ## Dashboard 5.3.0 / API 4.1.0 — 6 September 2026
 
