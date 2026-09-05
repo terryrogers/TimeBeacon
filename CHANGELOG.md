@@ -1,9 +1,10 @@
 # Changelog
 
-## Dashboard 5.1.0 / API 4.1.0 — prepared
+## Dashboard 5.1.0 / API 4.1.0 — 5 September 2026
 
 - Add detected operating system and hardware details above Server Status.
 - Include the same structured inventory in server-status API responses, restricted by Server Status viewing permission. Hardware summaries show maximum CPU frequency, physical cores, nominal RAM and the capacity/type of disks backing the operating system.
+- Deployed after 21 local tests. Installed detector output and served assets verified; accounts, configuration and historical samples preserved.
 
 
 ## Dashboard 5.0.0 / API 4.0.0 — 5 September 2026
