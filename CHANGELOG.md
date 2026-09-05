@@ -6,6 +6,7 @@
 - Dedicated Time Clients administration page for thresholds, foreground/background status colours, and a light/dark palette selector with automatic alternate colours.
 - Searchable Semantic UI clock picker with timezone IDs, location descriptions and country flags from the requested reference list; bundled scripts and flags work without external CDN requests.
 - Centre popup close controls; add dashboard branding links, a GitHub footer link and a World Clocks Manage shortcut. Move the personal photo toggle to the bottom of the clock settings pane.
+- Deployed after 33 local tests. All 37 runtime files and public assets verified; an on-demand server health collection completed in approximately four seconds and persisted successfully. Live health is healthy. Accounts, settings and history were preserved; Chrony and GPSD continued running without restart.
 
 ## Dashboard 5.2.0 / API 4.1.0 — 5 September 2026
 
