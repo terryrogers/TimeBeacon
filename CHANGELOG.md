@@ -1,6 +1,6 @@
 # Changelog
 
-## Dashboard 5.0.0 / API 4.0.0 — prepared
+## Dashboard 5.0.0 / API 4.0.0 — 5 September 2026
 
 - Semantic UI components with new Daylight and Midnight themes, bundled styles and icon fonts.
 - Dedicated form sign-in with server-side page protection; HTTP Basic removed.
@@ -9,6 +9,7 @@
 - Personal daylight location detection with nearest town/city lookup and hidden coordinates.
 - Fixed title and status bars on every popup, with independent content scrolling.
 - Additive identity migration preserves existing accounts, clocks and historic samples.
+- Deployed and verified: 18 local tests passed; live HTTPS/browser checks covered private sign-in, Administration, API access, graph controls and mobile layout. Existing identities and history were retained; monitoring services remained running. Authenticator enrollment was validated locally without enrolling a production account.
 
 
 ## Dashboard 4.0.0 / API 3.0.0 — 5 September 2026
