@@ -4,6 +4,42 @@ from typing import Literal
 from pydantic import BaseModel, Field, model_validator
 from fastapi import Request, HTTPException
 from security import IdentityStore
+import subprocess
+import re
+
+
+def system_services():
+    names = set()
+    try:
+        for command in ("list-unit-files", "list-units"):
+            result = subprocess.run(
+                [
+                    "/usr/bin/systemctl",
+                    command,
+                    "--type=service",
+                    "--all",
+                    "--no-legend",
+                    "--no-pager",
+                    "--plain",
+                    "--full",
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            for line in result.stdout.splitlines():
+                fields = line.split()
+                if fields and re.fullmatch(
+                    r"[A-Za-z0-9_][A-Za-z0-9_.@:\\-]*\.service", fields[0]
+                ):
+                    names.add(fields[0])
+    except (OSError, subprocess.SubprocessError):
+        raise HTTPException(
+            503, "Unable to load system services. Reload and try again."
+        )
+    return sorted(names, key=str.casefold)
+
 
 DEFAULT_COLOURS = {
     "mode": "light",
@@ -52,7 +88,7 @@ class Services(BaseModel):
         import re
 
         if any(
-            not re.fullmatch(r"[A-Za-z0-9_][A-Za-z0-9_.@:-]*\.service", unit)
+            not re.fullmatch(r"[A-Za-z0-9_][A-Za-z0-9_.@:\\-]*\.service", unit)
             or len(unit) > 200
             for unit in self.services
         ):
@@ -61,6 +97,19 @@ class Services(BaseModel):
 
 
 def install(app, backend):
+    @app.get("/administration/services", include_in_schema=False)
+    def inventory(request: Request):
+        store = IdentityStore(backend.monitor)
+        store.require(store.authenticate(request), "admin")
+        from telemetry import REQUIRED_SERVICES
+
+        return {
+            "services": system_services(),
+            "monitored": backend.monitor.get_settings()["settings"].get(
+                "services", list(REQUIRED_SERVICES)
+            ),
+        }
+
     def save(request, values):
         store = IdentityStore(backend.monitor)
         store.require(store.authenticate(request), "admin")

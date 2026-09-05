@@ -93,6 +93,8 @@ def basic(username="admin", password="admin"):
 
 
 def change(c, path, body):
+    if path == '/administration/users' and not body.get('id'):
+        body = {'name': 'Test User', 'email': 'test@example.test', 'enabled': True, **body}
     return c.put(path, json=body, headers={"Origin": "https://testserver"})
 
 

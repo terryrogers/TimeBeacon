@@ -1,5 +1,12 @@
 # Changelog
 
+## Dashboard 5.4.0 / API 4.1.0 — 6 September 2026
+
+- Align World Clocks Manage at the right edge and centre the GitHub icon with footer text.
+- Keep administration menu text readable on hover in both themes; use title case for Roles & Permissions, Configured Roles, Role Permissions, Service Health and Monitored Services.
+- Replace service-name entry with Available Services and Monitored Services lists, transfer arrows and an administrator-only system service inventory.
+- Require Name, Username and Email Address for new accounts, enforce one selected role, and default Account Enabled to off. Preserve existing accounts during deployment.
+
 ## Dashboard 5.3.0 / API 4.1.0 — 6 September 2026
 
 - Service Fix now collects and stores a fresh health sample before confirming resolution, distinguishes a repaired service from other remaining health problems, and immediately refreshes the dashboard. Scheduled and requested sampling share a process lock.

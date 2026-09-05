@@ -34,7 +34,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 # ---------------------------------------------------------------------------
 
 BASE_DIR = Path(__file__).resolve().parent
-ASSET_VERSION = hashlib.sha256(b"".join((BASE_DIR / name).read_bytes() for name in ("static/app.js", "static/dashboard.js", "static/app.css", "static/access.js", "static/theme.css", "static/pages.js", "static/clock-picker.js", "static/client-colours.js", "static/timezones.json"))).hexdigest()[:12]
+ASSET_VERSION = hashlib.sha256(b"".join((BASE_DIR / name).read_bytes() for name in ("static/app.js", "static/dashboard.js", "static/app.css", "static/access.js", "static/theme.css", "static/pages.js", "static/clock-picker.js", "static/client-colours.js", "static/timezones.json", "static/service-picker.js"))).hexdigest()[:12]
 
 CHRONYC = "/usr/bin/chronyc"
 

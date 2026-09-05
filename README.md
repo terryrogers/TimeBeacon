@@ -14,7 +14,9 @@ SQLite defaults to data/history.sqlite3; NTP_DASHBOARD_HISTORY_DB can override i
 
 ## Access control
 
-Administration creates/updates users and roles, assigns multiple roles to users, disables accounts, resets passwords, and configures health checks and client thresholds. Permissions are the union of the user's roles and are evaluated on each request. At least one enabled administrator must remain. User Settings manages name, email, profile photo (Gravatar by default), daylight location, personal clocks, password, authenticator registration and API keys. Keys inherit current account permissions and can be revoked individually.
+Administration creates/updates users and roles, assigns one role per account, disables accounts, resets passwords, and configures health checks and client thresholds. New accounts require Name, Username and Email Address, and Account Enabled is off by default. Selecting another role deselects the previous one. Existing account assignments are preserved until edited; permissions are evaluated on every request and at least one enabled administrator must remain. User Settings manages name, email, profile photo (Gravatar by default), daylight location, personal clocks, password, authenticator registration and API keys. Keys inherit current account permissions and can be revoked individually.
+
+Service Health lists installed service units and loaded/transient services under Available Services, excluding those already selected under Monitored Services. Select one or more entries, use the arrow buttons to move them, then Save Services. This changes health monitoring without starting or stopping services. At least one service must remain monitored. Inventory access requires administrator permission.
 
 The built-in User role grants dashboard, server/time status and history, world-clock viewing and time-client summaries. It cannot access Administration, individual clients, clock amendments or the API unless a configured role grants those permissions. Controls are hidden in the UI and the server independently denies unauthorized requests.
 

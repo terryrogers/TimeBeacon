@@ -81,7 +81,7 @@ def test_client_palette_and_searchable_clock_navigation(system):
         )
         page.reload()
         expect(page.locator("#client-colour-mode")).to_be_checked()
-        page.get_by_role("link", name="Service health", exact=True).click()
+        page.get_by_role("link", name="Service Health", exact=True).click()
         expect(page.locator("[name=warning_seconds]")).to_have_count(0)
         page.locator(".brand").click()
         expect(page.locator("#system-cpu")).to_be_visible()

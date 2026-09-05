@@ -11,7 +11,7 @@ from typing import Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from fastapi import HTTPException, Request, Query
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
 from security import IdentityStore, PERMISSIONS, digest, password_hash, password_ok
 from telemetry import REQUIRED_SERVICES, solar_status
 from account_api import ProfileInput, profile
@@ -35,8 +35,15 @@ class UserInput(ProfileInput):
     id: int | None = None
     username: str = Field(pattern=r"^[A-Za-z0-9_.@-]{1,80}$")
     password: str | None = Field(default=None, min_length=8, max_length=256)
-    roles: list[str] = Field(max_length=32)
-    enabled: bool = True
+    roles: list[str] = Field(min_length=1, max_length=1)
+    enabled: bool = False
+
+    @model_validator(mode='after')
+    def required_new_details(self):
+        self.name = self.name.strip()
+        if self.id is None and (not self.name or not self.email):
+            raise ValueError('Name, username and email address are required for a new account')
+        return self
 
 
 class PasswordInput(BaseModel):
