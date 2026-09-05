@@ -1,0 +1,16 @@
+work/
+data/
+__pycache__/
+.pytest_cache/
+*.pyc
+.env
+*.env
+venv/
+.venv/
+
+# Local deployment records, archives and infrastructure details
+deployment/
+source-manifest.json
+*.sqlite3*
+*.zip
+*.tar.gz
