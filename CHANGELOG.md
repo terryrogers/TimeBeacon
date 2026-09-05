@@ -6,6 +6,7 @@
 - Operating System and Hardware now occupy separate side-by-side panels, stacked on narrow screens.
 - Optional faint city photographs on world clocks, controlled per account in User Settings. Wikimedia Commons attribution is available on each photo tile; unavailable images leave a plain clock.
 - Additive account preference and photo-cache migrations preserve existing account and monitoring data. Public API contracts remain at 4.1.0.
+- Deployed after 29 local tests. All 28 installed runtime files and public assets verified; server-side photo retrieval succeeded for all six configured cities. Account data and history were preserved, with only the dashboard restarted. The existing missing-service warning remains for administrator review.
 
 ## Dashboard 5.1.0 / API 4.1.0 — 5 September 2026
 
