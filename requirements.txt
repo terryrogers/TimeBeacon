@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+jinja2
+slowapi
+psutil
+astral
+pyotp==2.9.0
+qrcode==8.2
+cryptography==50.0.1
