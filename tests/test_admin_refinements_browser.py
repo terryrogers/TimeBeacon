@@ -124,6 +124,7 @@ def test_service_transfer_account_defaults_and_alignment(system):
         ).to_be_visible()
         page.get_by_role("link", name="Users", exact=True).click()
         page.get_by_role("button", name="New User", exact=True).click()
+        page.locator("#onboarding-method").select_option("password")
         expect(page.locator("#edit-user-dialog")).to_be_visible()
         expect(
             page.get_by_role("checkbox", name="Account Enabled", exact=True)

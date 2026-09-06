@@ -80,6 +80,7 @@ def test_authenticated_dashboard_and_admin(system):
         page.get_by_role("button", name="Administration", exact=True).click()
         page.get_by_role("link", name="Users", exact=True).click()
         page.get_by_role("button", name="New User", exact=True).click()
+        page.locator("#onboarding-method").select_option("password")
         expect(page.locator("#edit-user-dialog")).to_be_visible()
         page.locator("#admin-user-form [name=username]").fill("viewer")
         page.locator('#admin-user-form [name=name]').fill('Test Viewer')

@@ -1,5 +1,9 @@
 # Changelog
 
+## Dashboard 5.9.1 / API 4.1.0 — 6 September 2026
+
+- Default new-account setup to Email Temporary Setup Link. Set Password Now remains available; existing account editing is unchanged.
+
 ## Dashboard 5.9.0 / API 4.1.0 — 6 September 2026
 
 - Add the reference-clock flag and a matching optional city photograph across Daylight & Display, with attribution and immediate background-preference updates.
