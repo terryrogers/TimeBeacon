@@ -1,5 +1,11 @@
 # Changelog
 
+## Dashboard 5.5.2 / API 4.1.0 — 6 September 2026
+
+- Add a country flag before each world clock country name using the bundled Semantic UI flags and existing timezone country mapping.
+- Align UTC offsets with the city, time and date text while retaining space for photo credits.
+- Verified six country flags and rendered text alignment in the browser. Installed files and public assets match the tested source; live health is healthy, with accounts/settings/history preserved and only the dashboard restarted.
+
 ## Dashboard 5.5.1 / API 4.1.0 — 6 September 2026
 
 - Shorten the API key clipboard countdown to 30 seconds, retaining conditional clearance and blocked-access retry.

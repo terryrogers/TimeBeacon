@@ -868,6 +868,14 @@ function buildClocks() {
                     </div>
                 `;
 
+                const country = CLOCK_COUNTRIES[item.zone];
+                if (country) {
+                    const flag = document.createElement("i");
+                    flag.className = country.toLowerCase() + " flag";
+                    flag.setAttribute("aria-hidden", "true");
+                    card.querySelector(".clock-zone").prepend(flag);
+                }
+
                 const remove = document.createElement("button");
                 remove.type="button"; remove.className="clock-remove";
                 remove.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6L18 18M18 6L6 18"/></svg>';

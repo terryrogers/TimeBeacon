@@ -72,6 +72,16 @@ def test_photo_editor_and_clock_controls(system):
         page.locator('#login-form button').click()
         page.locator('#world-panel>summary').click()
         expect(page.locator('.clock-card').last).to_be_visible()
+        for card, country in zip(page.locator('.clock-card').all(), ['us', 'gb', 'fr', 'il', 'jp', 'au']):
+            expect(card.locator('.clock-zone .flag')).to_have_class(country + ' flag')
+            expect(card.locator('.clock-offset')).to_contain_text('UTC ')
+            assert card.locator('.clock-zone .flag').evaluate("e=>getComputedStyle(e,'::before').backgroundImage") != 'none'
+            positions = card.evaluate("""card => ['.clock-city','.clock-time','.clock-date','.clock-offset'].map(selector => {
+                const range=document.createRange(); range.selectNodeContents(card.querySelector(selector));
+                return range.getBoundingClientRect().left;
+            })""")
+            assert max(positions)-min(positions)<2
+        page.locator('#world-panel').screenshot(path=str(ROOT/'work/world-clocks-552.png'),animations='disabled')
         last=page.locator('.clock-card').last.bounding_box()
         manage=page.locator('.world-manage').bounding_box()
         assert abs(last['x']+last['width']-manage['x']-manage['width'])<2
