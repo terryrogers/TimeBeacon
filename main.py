@@ -34,7 +34,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 # ---------------------------------------------------------------------------
 
 BASE_DIR = Path(__file__).resolve().parent
-ASSET_VERSION = hashlib.sha256(b"".join((BASE_DIR / name).read_bytes() for name in ("static/app.js", "static/dashboard.js", "static/app.css", "static/access.js", "static/theme.css", "static/pages.js", "static/clock-picker.js", "static/client-colours.js", "static/timezones.json", "static/service-picker.js", "static/key-clipboard.js", "static/photo-editor.js", "static/clock-controls.js"))).hexdigest()[:12]
+ASSET_VERSION = hashlib.sha256(b"".join((BASE_DIR / name).read_bytes() for name in ("static/app.js", "static/dashboard.js", "static/app.css", "static/access.js", "static/theme.css", "static/pages.js", "static/clock-picker.js", "static/client-colours.js", "static/timezones.json", "static/service-picker.js", "static/key-clipboard.js", "static/photo-editor.js", "static/clock-controls.js", "static/auth-ui.js", "static/location-settings.js"))).hexdigest()[:12]
 
 CHRONYC = "/usr/bin/chronyc"
 
@@ -559,6 +559,12 @@ monitor = Monitor(get_tracking, query_ntp_server, sources=get_sources, clients=g
 # Retire the previous unscoped endpoints; no legacy path may bypass RBAC.
 app.router.routes[:] = [route for route in app.router.routes if not getattr(route,"path","").startswith(("/api/","/dashboard/")) and getattr(route,"path","") != "/health"]
 import sys
+from auth_flows import install as install_auth_flows
+from mail_delivery import install as install_email
+install_auth_flows(app, sys.modules[__name__])
+install_email(app, sys.modules[__name__])
+from places import install as install_places
+install_places(app, sys.modules[__name__])
 from access_api import install
 install(app,sys.modules[__name__])
 from fastapi.openapi.utils import get_openapi
@@ -601,6 +607,8 @@ install_avatars(app, sys.modules[__name__])
 @app.get('/admin/users', include_in_schema=False)
 @app.get('/admin/roles', include_in_schema=False)
 @app.get('/admin/services', include_in_schema=False)
+@app.get('/admin/security', include_in_schema=False)
+@app.get('/admin/email', include_in_schema=False)
 @app.get('/admin/defaults', include_in_schema=False)
 @app.get('/admin/clients', include_in_schema=False)
 @app.get('/user-settings', include_in_schema=False)

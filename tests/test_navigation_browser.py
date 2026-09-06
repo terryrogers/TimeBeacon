@@ -1,3 +1,4 @@
+from test_access import browser_headers
 from pathlib import Path
 from unittest.mock import patch
 from playwright.sync_api import sync_playwright, expect
@@ -26,7 +27,7 @@ def test_client_palette_and_searchable_clock_navigation(system):
             )
             route.fulfill(
                 status=response.status_code,
-                headers=dict(response.headers),
+                headers=browser_headers(response),
                 body=response.content,
             )
 

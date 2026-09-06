@@ -1,3 +1,4 @@
+from test_access import browser_headers
 import io
 from unittest.mock import patch
 from pathlib import Path
@@ -31,7 +32,7 @@ def test_authenticated_dashboard_and_admin(system):
                 )
             route.fulfill(
                 status=response.status_code,
-                headers=dict(response.headers),
+                headers=browser_headers(response),
                 body=response.content,
             )
 
@@ -93,6 +94,7 @@ def test_authenticated_dashboard_and_admin(system):
             animations="disabled",
         )
         page.get_by_role("link", name="Dashboard", exact=True).click()
+        expect(page.locator('#server-status')).to_have_text('Server Online')
         page.locator("[data-history=cpu]").click()
         page.wait_for_selector("#history-graph path", state="attached")
         expect(page.locator("#history-title")).to_have_text("Historic CPU Usage")
@@ -130,7 +132,8 @@ def test_authenticated_dashboard_and_admin(system):
         page.context.grant_permissions(["geolocation"])
         page.context.set_geolocation({"latitude": 53.4808, "longitude": -2.2426})
         page.get_by_role("button", name="Get My Location", exact=True).click()
-        expect(page.locator("#location-label")).to_have_text("Manchester")
+        expect(page.locator("#location-label")).to_contain_text("Manchester")
+        expect(page.locator("#reference-clock")).to_contain_text("Europe/London")
         page.locator("#profile-form [name=name]").fill("Terry Rogers")
         page.get_by_role("button", name="Save Profile", exact=True).click()
         expect(page.locator("#page-feedback")).to_have_text("Profile saved.")

@@ -1,3 +1,4 @@
+from test_access import browser_headers
 import json
 from pathlib import Path
 from unittest.mock import patch
@@ -60,7 +61,7 @@ def test_repair_dialog_personal_photos_and_panel_layout(system):
             )
             route.fulfill(
                 status=response.status_code,
-                headers=dict(response.headers),
+                headers=browser_headers(response),
                 body=response.content,
             )
 

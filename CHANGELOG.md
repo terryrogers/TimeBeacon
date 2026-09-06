@@ -1,5 +1,15 @@
 # Changelog
 
+## Dashboard 5.8.0 / API 4.1.0 — 6 September 2026
+
+- Separate password sign-in from authenticator verification, with a dedicated recovery-code or administrator assistance screen.
+- Add expiring, single-use emailed password reset links, retaining 2FA and revoking existing sessions/API keys after reset.
+- Add Administration → Security for 2FA enforcement, recovery administrator selection and verified recovery approvals requiring new enrollment.
+- Add Administration → Email with SMTP encryption, encrypted password storage, sender details and a test-recipient control.
+- Keep email unconfigured and 2FA enforcement off until explicitly configured.
+- Search a bundled worldwide town/city catalogue beside Get My Location, with country flags, regions and time zones. Show a live reference clock below the chosen location.
+- Clear personal location to select a persistent manual Light/Dark theme; selecting a location restores automatic daylight mode.
+
 ## Dashboard 5.7.1 / API 4.1.0 — 6 September 2026
 
 - Move the smaller 3×3 drag handle to the top right of each clock card, with the remove × immediately to its left and space above the city name. Use the same handle in Settings.

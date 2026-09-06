@@ -1,3 +1,4 @@
+from test_access import browser_headers
 from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
 from test_access import system
@@ -13,7 +14,7 @@ def test_clock_controls_and_admin_defaults(system):
         def route(route):
             r=route.request;client.cookies.clear()
             response=client.request(r.method,r.url,headers=r.headers,content=r.post_data_buffer,follow_redirects=True)
-            route.fulfill(status=response.status_code,headers=dict(response.headers),body=response.content)
+            route.fulfill(status=response.status_code,headers=browser_headers(response),body=response.content)
         page.route('**/*',route)
         page.route('**/dashboard/clocks/image?*',lambda r:r.fulfill(json={'image':None}))
         page.route('https://gravatar.com/**',lambda r:r.abort())

@@ -140,6 +140,7 @@ def install(app, backend):
         result.setdefault("critical_drops", 10)
         result.setdefault("client_colours", DEFAULT_COLOURS)
         result.pop("clocks", None)
+        result.pop("email", None)
         return result
 
     def summary(clients):
@@ -248,31 +249,8 @@ def install(app, backend):
 
     @app.post("/auth/login", include_in_schema=False)
     def login(request: Request, body: Login):
-        store().same_origin(request)
-        user = store().credential(
-            body.username,
-            body.password,
-            request.client.host if request.client else "unknown",
-            body.code,
-        )
-        token = secrets.token_urlsafe(32)
-        with backend.monitor.connect() as db:
-            db.execute("DELETE FROM sessions WHERE expires<?", (time.time(),))
-            db.execute(
-                "INSERT INTO sessions VALUES (?,?,?)",
-                (digest(token), user["id"], int(time.time()) + 28800),
-            )
-        response = JSONResponse({"success": True})
-        response.set_cookie(
-            "timebeacon_session",
-            token,
-            httponly=True,
-            secure=True,
-            samesite="strict",
-            max_age=28800,
-            path="/",
-        )
-        return response
+        from auth_flows import begin_login
+        return begin_login(backend.monitor, request, body.username, body.password)
 
     @app.post("/auth/logout", include_in_schema=False)
     def logout(request: Request):
@@ -283,6 +261,9 @@ def install(app, backend):
                 (digest(request.cookies.get("timebeacon_session", "")),),
             )
         response = JSONResponse({"success": True})
+        with backend.monitor.connect() as db:
+            db.execute('DELETE FROM auth_challenges WHERE token=?', (digest(request.cookies.get('timebeacon_challenge', '')),))
+        response.delete_cookie("timebeacon_challenge", path='/')
         response.delete_cookie("timebeacon_session")
         return response
 
@@ -524,7 +505,9 @@ def install(app, backend):
     @app.get("/dashboard/solar", include_in_schema=False)
     def solar(request: Request):
         c = who(request)["location"]
-        return solar_status(latitude=c["latitude"], longitude=c["longitude"])
+        if c.get('latitude') is None or c.get('longitude') is None:
+            return dict(theme=c.get('theme', 'light'), automatic=False, location='', sunrise=None, sunset=None)
+        return {**solar_status(latitude=c['latitude'], longitude=c['longitude']), 'automatic': True, 'location': c.get('location', '')}
 
     @app.get("/dashboard/time", include_in_schema=False)
     def ntp_time(request: Request):

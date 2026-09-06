@@ -1,3 +1,4 @@
+from test_access import browser_headers
 from pathlib import Path
 from unittest.mock import patch
 from playwright.sync_api import sync_playwright, expect
@@ -33,7 +34,7 @@ def test_service_transfer_account_defaults_and_alignment(system):
             )
             route.fulfill(
                 status=response.status_code,
-                headers=dict(response.headers),
+                headers=browser_headers(response),
                 body=response.content,
             )
 

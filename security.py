@@ -67,6 +67,10 @@ CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY,user_id INTEGER NOT N
 CREATE TABLE IF NOT EXISTS api_keys(id INTEGER PRIMARY KEY,user_id INTEGER NOT NULL,name TEXT NOT NULL,token TEXT UNIQUE NOT NULL,created INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS login_attempts(address TEXT NOT NULL,stamp INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS service_actions(id INTEGER PRIMARY KEY,stamp REAL NOT NULL,user_id INTEGER NOT NULL,unit TEXT NOT NULL,action TEXT NOT NULL,result TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS auth_attempts(address TEXT NOT NULL,stamp INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS auth_challenges(token TEXT PRIMARY KEY,user_id INTEGER NOT NULL,fingerprint TEXT NOT NULL,kind TEXT NOT NULL,expires INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS password_resets(token TEXT PRIMARY KEY,user_id INTEGER NOT NULL,fingerprint TEXT NOT NULL,expires INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS recovery_requests(id INTEGER PRIMARY KEY,user_id INTEGER NOT NULL,created INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'pending',fingerprint TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS city_images(zone TEXT PRIMARY KEY,payload TEXT NOT NULL,expires REAL NOT NULL);"""
             )
             db.execute("BEGIN IMMEDIATE")
@@ -79,6 +83,7 @@ CREATE TABLE IF NOT EXISTS city_images(zone TEXT PRIMARY KEY,payload TEXT NOT NU
                 "avatar_upload": "BLOB",
                 "location": "TEXT NOT NULL DEFAULT '{}'",
                 "totp": "TEXT NOT NULL DEFAULT ''",
+                "require_2fa": "INTEGER NOT NULL DEFAULT 0",
                 "totp_pending": "TEXT NOT NULL DEFAULT ''",
                 "totp_pending_until": "INTEGER NOT NULL DEFAULT 0",
                 "totp_last": "INTEGER NOT NULL DEFAULT -1",
@@ -172,7 +177,7 @@ CREATE TABLE IF NOT EXISTS city_images(zone TEXT PRIMARY KEY,payload TEXT NOT NU
             ),
         }
 
-    def credential(self, username, password, address, code=""):
+    def credential(self, username, password, address, code="", password_only=False):
         now = int(time.time())
         with self.monitor.connect() as db:
             db.execute("BEGIN IMMEDIATE")
@@ -196,7 +201,10 @@ CREATE TABLE IF NOT EXISTS city_images(zone TEXT PRIMARY KEY,payload TEXT NOT NU
             if not row or not valid:
                 raise HTTPException(401, "Invalid credentials")
             user = self.identity(db, row[0])
-            self.verify_second_factor(db, user["id"], code)
+            if password_only:
+                user["_verified_password"] = digest(row[1])
+            else:
+                self.verify_second_factor(db, user["id"], code)
             db.execute("DELETE FROM login_attempts WHERE address=?", (address,))
             return user
 
@@ -232,6 +240,10 @@ CREATE TABLE IF NOT EXISTS city_images(zone TEXT PRIMARY KEY,payload TEXT NOT NU
                 "Authentication required",
                 headers={},
             )
+        with self.monitor.connect() as db:
+            enrolled, required = db.execute('SELECT totp,require_2fa FROM users WHERE id=?', (user['id'],)).fetchone()
+        if not enrolled and (required or self.monitor.get_settings()['settings'].get('security', {}).get('enforce_2fa', False)):
+            raise HTTPException(403, 'Authenticator setup required. Sign in again to register.')
         if api or authorization:
             self.require(user, "api.view")
         return user

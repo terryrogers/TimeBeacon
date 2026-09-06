@@ -1,3 +1,4 @@
+from test_access import browser_headers
 from pathlib import Path
 from unittest.mock import patch
 import pytest
@@ -63,7 +64,7 @@ def test_photo_editor_and_clock_controls(system):
             r=route.request
             c.cookies.clear()
             response=c.request(r.method,r.url,headers=r.headers,content=r.post_data_buffer,follow_redirects=True)
-            route.fulfill(status=response.status_code,headers=dict(response.headers),body=response.content)
+            route.fulfill(status=response.status_code,headers=browser_headers(response),body=response.content)
         page.route('**/*',route)
         page.route('https://gravatar.com/**',lambda r:r.abort())
         page.goto('https://testserver/')

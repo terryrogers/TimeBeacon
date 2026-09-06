@@ -134,23 +134,18 @@ def test_two_factor_enrollment_login_replay_recovery_and_disable(system):
     recovery = response.json()["recovery_codes"]
     assert c.get("/user/profile").json()["two_factor"] is True
     c.cookies.clear()
-    assert login(c).status_code == 401
-    assert (
-        c.post(
-            "/auth/login",
-            json={"username": "admin", "password": "admin", "code": code},
-            headers=ORIGIN,
-        ).status_code
-        == 401
-    )
-    body = {"username": "admin", "password": "admin", "code": recovery[0]}
-    assert c.post("/auth/login", json=body, headers=ORIGIN).status_code == 200
-    assert c.post("/auth/login", json=body, headers=ORIGIN).status_code == 401
+    assert login(c).json()['stage'] == 'factor'
+    assert c.get('/auth/me').status_code == 401
+    assert c.post('/auth/second-factor', json={'code': code}, headers=ORIGIN).status_code == 401
+    assert c.post('/auth/second-factor', json={'code': recovery[0], 'recovery': True}, headers=ORIGIN).status_code == 200
+    assert login(c).json()['stage'] == 'factor'
+    assert c.post('/auth/second-factor', json={'code': recovery[0], 'recovery': True}, headers=ORIGIN).status_code == 401
     next_time = (int(time.time()) // 30 + 2) * 30
-    with patch("time.time", return_value=next_time):
-        body["code"] = pyotp.TOTP(secret).at(next_time)
-        assert c.post("/auth/login", json=body, headers=ORIGIN).status_code == 200
-        assert c.post("/auth/login", json=body, headers=ORIGIN).status_code == 401
+    with patch('time.time', return_value=next_time):
+        assert c.post('/auth/second-factor', json={'code': pyotp.TOTP(secret).at(next_time)}, headers=ORIGIN).status_code == 200
+        assert login(c).json()['stage'] == 'factor'
+        assert c.post('/auth/second-factor', json={'code': pyotp.TOTP(secret).at(next_time)}, headers=ORIGIN).status_code == 401
+        assert c.post('/auth/second-factor', json={'code': recovery[2], 'recovery': True}, headers=ORIGIN).status_code == 200
     assert (
         c.post(
             "/user/2fa/disable",
@@ -179,6 +174,7 @@ def test_two_factor_failed_attempts_are_throttled(system):
         == 200
     )
     c.cookies.clear()
+    assert login(c).json()['stage'] == 'factor'
     for _ in range(10):
-        assert login(c).status_code == 401
-    assert login(c).status_code == 429
+        assert c.post('/auth/second-factor', json={'code': 'invalid'}, headers=ORIGIN).status_code == 401
+    assert c.post('/auth/second-factor', json={'code': 'invalid'}, headers=ORIGIN).status_code == 429

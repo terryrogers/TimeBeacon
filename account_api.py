@@ -14,6 +14,7 @@ import qrcode.image.svg
 from fastapi import HTTPException, Request
 from pydantic import BaseModel, Field, field_validator
 from security import IdentityStore, digest
+from places import nearest, location_from, reference
 
 
 class ProfileInput(BaseModel):
@@ -83,6 +84,7 @@ def profile(db, user_id):
         gravatar_enabled=bool(row[6]),
         custom_photo=bool(row[7] or row[2]),
         location=json.loads(row[4]),
+        reference_clock=reference(json.loads(row[4])),
         clock_backgrounds=bool(row[5]),
     )
 
@@ -116,7 +118,7 @@ def install(app, backend):
     def get_profile(request: Request):
         identity = user(request)
         with backend.monitor.connect() as db:
-            return profile(db, identity["id"])
+            return {**profile(db, identity["id"]), "two_factor_enforced": backend.monitor.get_settings()["settings"].get("security", {}).get("enforce_2fa", False)}
 
     @app.put("/user/profile", include_in_schema=False)
     def save_profile(request: Request, body: ProfileInput):
@@ -197,7 +199,8 @@ def install(app, backend):
                     "INSERT OR REPLACE INTO geocodes VALUES (?,?,?)",
                     (key, city, time.time()),
                 )
-        location = dict(location=city, latitude=body.latitude, longitude=body.longitude)
+        location = location_from(nearest(body.latitude, body.longitude), body.latitude, body.longitude)
+        location['location'] = city
         with backend.monitor.connect() as db:
             db.execute(
                 "UPDATE users SET location=?,version=version+1 WHERE id=?",
@@ -288,6 +291,8 @@ def install(app, backend):
     @app.post("/user/2fa/disable", include_in_schema=False)
     def disable(request: Request, body: Verification):
         identity = user(request, True)
+        if backend.monitor.get_settings()['settings'].get('security', {}).get('enforce_2fa', False):
+            raise HTTPException(403, 'Two-factor authentication is required by the administrator.')
         reauthenticate(request, identity, body)
         with backend.monitor.connect() as db:
             db.execute(

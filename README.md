@@ -2,7 +2,7 @@
 
 Precision-time monitoring for Linux NTP/Chrony servers: system metrics, service health, GPS/PPS reception, time acquisition, time clients and personal world clocks.
 
-Dashboard **5.7.1** · API **4.1.0** · Copyright (c) 2026 Terry Rogers · MIT License.
+Dashboard **5.8.0** · API **4.1.0** · Copyright (c) 2026 Terry Rogers · MIT License.
 
 ## Setup
 
@@ -20,6 +20,18 @@ Service Health lists installed service units and loaded/transient services under
 
 The built-in User role grants dashboard, server/time status and history, world-clock viewing and time-client summaries. It cannot access Administration, individual clients, clock amendments or the API unless a configured role grants those permissions. Controls are hidden in the UI and the server independently denies unauthorized requests.
 
+## Sign-in and Recovery
+
+Sign-in first checks username and password. Accounts with an authenticator then receive a separate verification screen; No Authenticator Code offers a single-use recovery code or an email request to the configured recovery administrator. An unfinished sign-in has no dashboard, account or API access. Challenges expire after ten minutes and are rate limited.
+
+Administration → Security selects an enabled recovery administrator with an email address and controls Enforce 2FA. The administrator enabling enforcement must already have an authenticator. Unregistered accounts must complete registration before access; existing sessions and API keys cannot bypass that requirement. Enforcement is off until explicitly enabled. Recovery approval requires the designated administrator to verify the person independently, then re-enter their password and authenticator/recovery code when applicable. Approval revokes the target's sessions, keys and old authenticator and requires fresh enrollment at the next password sign-in. Administrators cannot approve their own recovery.
+
+Administration → Email configures SMTP hostname, port, STARTTLS/SSL/TLS, username, password, sender email/name and the public HTTPS dashboard URL. Authenticated SMTP requires encryption with certificate validation. The SMTP password is encrypted with the existing identity key and never returned to the UI; an empty password field preserves it. Save settings, then enter a Test To Email Address and select Send Test Email. SMTP acceptance is reported separately from delivery to the recipient inbox. Email is unconfigured until these settings are saved.
+
+Forgotten Password sends a 15-minute, single-use link to the account's saved email address, using the configured HTTPS URL. The browser removes the reset token from the URL before submitting the new password. Responses do not identify whether the account exists. Password resets revoke sessions and API keys but preserve registered 2FA. Email failures are logged without recipients, credentials or reset links; users can contact their administrator if mail does not arrive.
+
+Recovery design follows the [OWASP password reset guidance](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html) and [multifactor recovery guidance](https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html).
+
 ## World Clocks
 
 Administration → Defaults configures six distinct time zones, in display order. The initial selection is Los Angeles, New York, London, Dubai, Singapore and Sydney: major cities spread west to east across six time zones. This selection combines geographic coverage with [GaWC global-city classification](https://gawc.lboro.ac.uk/gawc-worlds/the-world-according-to-gawc/world-cities-2024/), rather than a population ranking.
@@ -33,6 +45,10 @@ See [API reference](docs/API.md) and the instance's /docs OpenAPI interface. Sig
 History defaults to the last 60 minutes. Dates accept Unix seconds or ISO 8601 with an explicit timezone. API arrays contain original samples with bounded pagination; graph displays select representative samples for long periods. Null values and gaps represent unavailable measurements.
 
 ## Appearance and account security
+
+Settings → Daylight & Display offers a local type-to-search catalogue of 170,942 towns and cities beside Get My Location. Search by city, country or region; results show country flags and IANA time zones. Selecting a result saves that town's coordinates to the account and displays a live reference clock. Clear Location reveals the manual Light/Dark toggle; the preference survives reloads and is shared by that account's browsers. Selecting or detecting a location restores automatic sunrise/sunset mode. Device-location reference clocks use the nearest catalogued settlement's time zone, while daylight calculations retain device coordinates. Near time-zone borders this is a town-based reference, not a boundary lookup.
+
+The bundled [GeoNames catalogue](https://download.geonames.org/export/dump/) covers settlements above 1,000 inhabitants and administrative seats through PPLA3; it does not guarantee every settlement exists or is current. Its CC BY 4.0 attribution, transformation details and rebuild command are in [assets/geography/README.md](assets/geography/README.md). Search requires no external requests or credentials.
 
 Semantic UI 2.5.0 styles and icon fonts are bundled locally under `static/vendor/semantic` with their MIT license. Daylight and Midnight themes follow each signed-in user's sunrise and sunset. The anonymous sign-in page uses the browser's colour preference. Administration has dedicated overview, user directory, role and service-health pages. Dialog titles and status bars remain outside their scrolling content area.
 

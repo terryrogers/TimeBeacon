@@ -416,3 +416,11 @@ def test_session_probe_does_not_trigger_browser_basic_prompt(system):
     assert "www-authenticate" not in client.get("/auth/me").headers
     assert "www-authenticate" not in client.get("/server/status").headers
     assert client.get("/server/status", headers=basic()).status_code == 401
+
+
+def browser_headers(response):
+    headers = dict(response.headers)
+    cookies = response.headers.get_list('set-cookie')
+    if cookies:
+        headers['set-cookie'] = '\n'.join(cookies)
+    return headers

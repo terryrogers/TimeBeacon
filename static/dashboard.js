@@ -38,7 +38,7 @@ async function configureTheme() {
     try {
         const solar = await fetchJson("/dashboard/solar");
         document.documentElement.dataset.theme=solar.theme;
-        document.getElementById("solar-summary").textContent=settings.location+" · "+(solar.theme === "dark" ? "Night" : "Daylight");
+        document.getElementById("solar-summary").textContent=solar.automatic===false?"Manual Theme · "+(solar.theme === "dark" ? "Dark" : "Light"):solar.location+" · "+(solar.theme === "dark" ? "Night" : "Daylight");
     } catch { document.getElementById("solar-summary").textContent="Daylight calculation unavailable"; }
 }
 function configureSettings() {}
