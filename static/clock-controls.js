@@ -23,7 +23,8 @@ function configureClockControls(container,clocks,version,onSaved,reload,defaults
         const clock=clocks[index];row.dataset.clockZone=clock.zone;
         const card=row.classList.contains('clock-card');
         const actions=card?row:document.createElement('div');if(!card){actions.className='clock-row-actions';row.append(actions);}
-        const handle=uiButton('⠿',()=>{});handle.className='ui icon button clock-drag';
+        const handle=uiButton('',()=>{});
+        handle.innerHTML='<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">'+[3,8,13].flatMap(y=>[3,8,13].map(x=>'<circle cx="'+x+'" cy="'+y+'" r="1"/>')).join('')+'</svg>';handle.className='ui icon button clock-drag';
         handle.title='Drag to Reorder · Arrow Keys Also Move This Clock';
         handle.setAttribute('aria-label','Reorder '+clock.name+' clock');
         const remove=uiButton(card?'×':'Remove',()=>changeClocks(clocks.filter(c=>c.zone!==clock.zone),version,onSaved,reload,'Clock removed.'));
@@ -41,15 +42,25 @@ function configureClockControls(container,clocks,version,onSaved,reload,defaults
         let drag=null;
         const finish=event=>{
             if(!drag)return;const state=drag;drag=null;
+            state.preview?.remove();
             row.classList.remove('clock-dragging');container.querySelectorAll('.clock-drop-target').forEach(r=>r.classList.remove('clock-drop-target'));
             if(handle.hasPointerCapture(event.pointerId))handle.releasePointerCapture(event.pointerId);
             if(event.type==='pointerup'&&state.moved&&state.target!==null)move(state.target);
         };
-        handle.onpointerdown=event=>{if(event.button!==0||clockChangePending)return;event.preventDefault();handle.focus();drag={x:event.clientX,y:event.clientY,target:null,moved:false};handle.setPointerCapture(event.pointerId);};
+        handle.onpointerdown=event=>{if(event.button!==0||clockChangePending)return;event.preventDefault();handle.focus();drag={x:event.clientX,y:event.clientY,target:null,moved:false,preview:null,pointerId:event.pointerId};handle.setPointerCapture(event.pointerId);};
         handle.onpointermove=event=>{
             if(!drag)return;
             if(Math.hypot(event.clientX-drag.x,event.clientY-drag.y)<6&&!drag.moved)return;
-            drag.moved=true;row.classList.add('clock-dragging');
+            if(!drag.moved){
+                const rect=row.getBoundingClientRect();
+                const preview=row.cloneNode(true);preview.classList.add('clock-drag-preview');preview.removeAttribute('data-clock-zone');
+                preview.setAttribute('aria-hidden','true');preview.inert=true;
+                preview.querySelectorAll('[id]').forEach(element=>element.removeAttribute('id'));
+                Object.assign(preview.style,{left:rect.left+'px',top:rect.top+'px',width:rect.width+'px',height:rect.height+'px'});
+                document.body.append(preview);drag.preview=preview;
+                drag.moved=true;row.classList.add('clock-dragging');
+            }
+            drag.preview.style.transform='translate('+(event.clientX-drag.x)+'px,'+(event.clientY-drag.y)+'px)';
             container.querySelectorAll('.clock-drop-target').forEach(r=>r.classList.remove('clock-drop-target'));
             const target=document.elementFromPoint(event.clientX,event.clientY)?.closest('[data-clock-zone]');
             drag.target=target&&target.parentElement===container?[...container.children].indexOf(target):null;
@@ -57,6 +68,7 @@ function configureClockControls(container,clocks,version,onSaved,reload,defaults
             const rect=container.getBoundingClientRect();
             if(event.clientY<rect.top+35)container.scrollTop-=18;else if(event.clientY>rect.bottom-35)container.scrollTop+=18;
         };
-        handle.onpointerup=finish;handle.onpointercancel=finish;
+        handle.onpointerup=finish;handle.onpointercancel=finish;handle.onlostpointercapture=finish;
+        handle.addEventListener('keydown',event=>{if(event.key==='Escape'&&drag){event.preventDefault();finish({type:'cancel',pointerId:drag.pointerId});}});
     }
 }

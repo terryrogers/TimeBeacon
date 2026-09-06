@@ -1,5 +1,12 @@
 # Changelog
 
+## Dashboard 5.7.1 / API 4.1.0 — 6 September 2026
+
+- Move the smaller 3×3 drag handle to the top right of each clock card, with the remove × immediately to its left and space above the city name. Use the same handle in Settings.
+- Show the dragged card or Settings row following the pointer, with a placeholder and destination highlight. Support cancellation without saving a reorder.
+- Keep Reset Clocks only in Settings.
+- Show flags, timezone names and right-aligned location descriptions in selected Defaults and personal clock pickers, matching their menus. Display UTC with a space before +/- in place of GMT.
+
 ## Dashboard 5.7.0 / API 4.1.0 — 6 September 2026
 
 - Add Administration → Defaults with six searchable city selectors and conflict-safe SQLite persistence. Existing user clocks remain unchanged.
