@@ -86,15 +86,14 @@ dialog.ui.modal.window{height:fit-content}.history-controls{min-width:100%;width
 
 /* Native dropdowns must fit their line box plus padding (Semantic defaults to 38px). */
 .ui.form select:not([multiple]),select.ui.dropdown:not([multiple]){height:auto;min-height:48px;line-height:1.5;padding:.625rem .75rem;vertical-align:middle}
-.loading-status{display:flex;align-items:center;gap:.65rem;width:fit-content;max-width:100%;padding:.6rem .8rem;margin:0 0 .75rem;border:1px solid var(--border);border-radius:8px;background:var(--panel-alt);color:var(--text);font-size:.85rem;line-height:1.4;position:relative;z-index:4;pointer-events:none}
-.loading-status.loading-dock{position:fixed;bottom:1rem;right:1rem;margin:0;z-index:1000;box-shadow:var(--shadow)}
-.window-content>.loading-status{position:sticky;top:0;z-index:20}
-.loading-status .ui.loader{flex:none;margin:0;color:var(--text)}
-.loading-status .ui.loader:before{border-color:var(--border)}
-.loading-status .ui.loader:after{border-top-color:var(--accent)}
-.clock-card>.loading-status{position:absolute;bottom:1.8rem;left:.5rem;right:.5rem;margin:0;font-size:.7rem}
-@media(prefers-reduced-motion:reduce){.loading-status .ui.loader:after{animation-duration:2s}}
-
-.explicit-loading{pointer-events:none;min-height:44px}#location-search-loading{margin:.75rem 0}#daylight-display>#location-search-loading{z-index:2}
-
-#location-picker.ui.loading.dropdown>.dropdown.icon:before{border-color:var(--border)}#location-picker.ui.loading.dropdown>.dropdown.icon:after{border-color:var(--accent) transparent transparent!important}
+/* Standard Semantic UI dimmers, scoped to the content being loaded. */
+.loading-region{position:relative;min-height:140px}
+.ui.dimmer.loading-status,#daylight-display>.ui.dimmer.loading-status{position:absolute;inset:0;width:100%;height:100%;margin:0;border:0;border-radius:inherit;background:color-mix(in srgb,var(--panel) 88%,transparent);color:var(--text);z-index:30;transition:none}
+body>.ui.dimmer.loading-status{position:fixed}
+.ui.dimmer.loading-status .ui.loader{color:var(--text)}
+.ui.dimmer.loading-status .ui.loader:before,#location-search-loading.ui.loader:before{border-color:var(--border)}
+.ui.dimmer.loading-status .ui.loader:after,#location-search-loading.ui.loader:after{border-top-color:var(--accent)}
+#location-picker.ui.selection.dropdown{padding-right:4.25rem}
+#location-picker.ui.search.dropdown>input.search{padding-right:4.25rem}
+#location-picker>#location-search-loading.ui.loader{position:absolute;left:auto;right:2.6rem;top:50%;transform:translateY(-50%);margin:0;pointer-events:none}
+@media(prefers-reduced-motion:reduce){.loading-status .ui.loader:after,#location-search-loading:after{animation-duration:2s}}

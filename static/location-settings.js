@@ -48,9 +48,9 @@ function initialiseLocationSettings(){
         return ()=>{activity.delete(key);paintActivity();};
     }
     function paintActivity(){
-        loader.hidden=!activity.size;picker.toggleClass('loading',!!activity.size);
+        loader.hidden=!activity.size;
         picker.attr('aria-busy',String(!!activity.size));
-        if(activity.size)loader.querySelector('span').textContent=[...activity.values()].at(-1);
+        if(activity.size)loader.setAttribute('aria-label',[...activity.values()].at(-1));
     }
     function cancelSearch(){++locationRequest;clearTimeout(locationTimer);searchAbort?.abort();}
     function localMatches(query){
@@ -101,7 +101,7 @@ function initialiseLocationSettings(){
         cancelSearch();const query=input.value.trim(),request=locationRequest;
         renderPlaces(localMatches(query));
         if(query.length<2){feedback('location-feedback',countryRows.length?'Showing towns and cities in your selected country. Type to search worldwide.':'Type at least two characters to search.');return;}
-        feedback('location-feedback','Searching worldwide…');
+        feedback('location-feedback','');
         const finish=busy('Searching Cities And Towns…');searchAbort=new AbortController();const signal=searchAbort.signal;
         // Cancellation covers the debounce period as well as the network request.
         signal.addEventListener('abort',finish,{once:true});

@@ -1,5 +1,11 @@
 # Changelog
 
+## Dashboard 5.9.4 / API 4.1.0 — 6 September 2026
+
+- Place an icon-only city/town search spinner inside the dropdown, immediately left of its arrow, without loading text.
+- Replace loading banners and corner notices with centred Semantic UI dimmers and relevant text, including Getting Users.
+- Match dimmers to the active theme, preserve popup headers and footers, and clean up after success, failure or cancellation.
+
 ## Dashboard 5.9.3 / API 4.1.0 — 6 September 2026
 
 - Pre-cache the selected country’s town/city catalogue in the browser session; show local matches immediately and retain worldwide search.

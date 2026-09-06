@@ -1,24 +1,24 @@
 "use strict";
-// One delayed Semantic UI status per region, shared by overlapping operations.
+// One delayed Semantic UI dimmer per region, shared by overlapping operations.
 const loadingRegions=new Map();
 function beginLoading({target=null,label='Loading…',silent=false}={}) {
     if(silent)return ()=>{};
-    let key=target||document.body;
+    let key=target||document.querySelector('.page-content,main')||document.body;
     if(target){
         const parent=[...loadingRegions.keys()].find(region=>region!==document.body&&region.contains(target));
         if(parent)key=parent;
     }
     let state=loadingRegions.get(key);
     if(!state){
-        const status=document.createElement('div'),spinner=document.createElement('div'),text=document.createElement('span');
-        status.className='loading-status'+(target?'':' loading-dock');status.setAttribute('role','status');status.setAttribute('aria-live','polite');status.hidden=true;
-        spinner.className='ui active mini inline loader';spinner.setAttribute('aria-hidden','true');text.textContent=label;status.append(spinner,text);
-        state={count:0,status,priorBusy:key.getAttribute('aria-busy')};loadingRegions.set(key,state);
-        state.timer=setTimeout(()=>{if(!key.isConnected)return;key.setAttribute('aria-busy','true');key.prepend(status);status.hidden=false;},350);
+        const status=document.createElement('div'),spinner=document.createElement('div');
+        status.className='ui active inverted dimmer loading-status';status.setAttribute('role','status');status.setAttribute('aria-live','polite');status.hidden=true;
+        spinner.className='ui text loader';spinner.textContent=label;status.append(spinner);
+        state={count:0,status,priorBusy:key.getAttribute('aria-busy'),priorRegion:key.classList.contains('loading-region')};loadingRegions.set(key,state);
+        state.timer=setTimeout(()=>{if(!key.isConnected)return;key.setAttribute('aria-busy','true');key.classList.add('loading-region');key.prepend(status);status.hidden=false;},350);
     }
     state.count++;
     let done=false;
-    return ()=>{if(done)return;done=true;if(--state.count)return;clearTimeout(state.timer);state.status.remove();if(state.priorBusy===null)key.removeAttribute('aria-busy');else key.setAttribute('aria-busy',state.priorBusy);loadingRegions.delete(key);};
+    return ()=>{if(done)return;done=true;if(--state.count)return;clearTimeout(state.timer);state.status.remove();if(!state.priorRegion)key.classList.remove('loading-region');if(state.priorBusy===null)key.removeAttribute('aria-busy');else key.setAttribute('aria-busy',state.priorBusy);loadingRegions.delete(key);};
 }
 async function withLoading(action,view) {const finish=beginLoading(view);try{return await action();}finally{finish();}}
 function loadingView(url,method='GET') {
@@ -36,6 +36,7 @@ function loadingView(url,method='GET') {
     else if(path==='/dashboard/time'){target=byId('world-panel');label='Synchronising Clocks…';}
     else if(path.includes('/clocks/')||path==='/static/timezones.json'||path==='/dashboard/settings'){target=byId('user-clocks')||byId('world-panel');label='Loading Clocks…';}
     else if(path.startsWith('/user/keys')){target=byId('key-section');label='Updating API Keys…';}
+    else if(path==='/administration'){target=document.querySelector('.page-content');label='Getting Administration…';}
     else if(path==='/administration/users'&&method!=='GET'){target=byId('edit-user-dialog')?.querySelector('.window-content');}
     if(target?.tagName==='DETAILS'&&!target.open)target=null;
     return {target,label};

@@ -41,7 +41,7 @@ def test_cached_country_search_and_visible_loaders(system):
         delay['path']='/user/locations/country?'
         page.goto('https://testserver/user-settings')
         expect(page.locator('#location-search-loading')).to_be_visible()
-        expect(page.locator('#location-picker')).to_have_class(__import__('re').compile('loading'))
+        expect(page.locator('#location-picker')).to_have_attribute('aria-busy','true')
         delay['path']=None;fulfill(held.pop())
         expect(page.locator('#location-search-loading')).to_be_hidden()
         assert len(country_calls)==1 and 'code=gb' in country_calls[0]
@@ -53,12 +53,19 @@ def test_cached_country_search_and_visible_loaders(system):
         with page.expect_request('**/user/locations/search?*'):
             search.fill('Woking')
         expect(page.locator('#location-search-loading')).to_be_visible()
-        expect(page.locator('#location-search-loading')).to_contain_text('Searching Cities And Towns')
+        expect(page.locator('#location-search-loading')).to_have_text('')
+        expect(page.locator('#location-feedback')).to_have_text('')
         expect(page.locator('#location-picker .menu .item').filter(has_text='Woking').first).to_be_visible()
         # Cached country matches are available while the worldwide request is held.
         for theme in ['light','dark']:
             page.evaluate('(theme)=>document.documentElement.dataset.theme=theme',theme)
-            page.locator('#daylight-display').screenshot(path=str(Path(f'work/country-loader-593-{theme}.png').resolve()))
+            spinner=page.locator('#location-search-loading').bounding_box()
+            arrow=page.locator('#location-picker>.dropdown.icon').bounding_box()
+            field=page.locator('#location-picker').bounding_box()
+            assert field['x'] < spinner['x'] and spinner['x']+spinner['width'] <= arrow['x']
+            assert abs(spinner['y']+spinner['height']/2-field['y']-field['height']/2)<2
+            assert page.locator('#location-picker>.dropdown.icon').evaluate("e=>getComputedStyle(e,':before').content") not in ['none','normal','\"\"']
+            page.locator('#daylight-display').screenshot(path=str(Path(f'work/country-loader-594-{theme}.png').resolve()))
         held.pop().fulfill(status=500,content_type='application/json',body='{"detail":"Unavailable"}')
         expect(page.locator('#location-feedback')).to_contain_text('Cached country results')
         expect(page.locator('#location-search-loading')).to_be_hidden()
@@ -80,10 +87,15 @@ def test_cached_country_search_and_visible_loaders(system):
         expect(page.locator('#location-picker .menu .item')).to_have_count(0)
 
         delay['path']='/administration'
-        page.goto('https://testserver/admin/users')
+        with page.expect_request('**/administration'):
+            page.goto('https://testserver/admin/users')
         expect(page.locator('#user-directory #users-loading')).to_be_visible()
         expect(page.locator('#users-loading .ui.loader')).to_be_visible()
-        page.locator('#user-directory').screenshot(path=str(Path('work/users-loader-593.png').resolve()))
+        expect(page.locator('#users-loading')).to_have_class(__import__('re').compile('ui active inverted dimmer'))
+        expect(page.locator('#users-loading .ui.text.loader')).to_have_text('Getting Users')
+        for theme in ['light','dark']:
+            page.evaluate('(theme)=>document.documentElement.dataset.theme=theme',theme)
+            page.locator('#user-directory').screenshot(path=str(Path(f'work/users-loader-594-{theme}.png').resolve()))
         held.pop().fulfill(status=500,content_type='application/json',body='{"detail":"Users unavailable"}')
         expect(page.locator('#users-loading')).to_be_hidden()
         expect(page.locator('#page-feedback')).to_contain_text('Users unavailable')

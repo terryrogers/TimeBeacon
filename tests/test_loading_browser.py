@@ -31,7 +31,8 @@ def test_slow_requests_dropdown_and_loader_cleanup(system):
         expect(page.locator('#system-cpu')).to_have_text('17.0 %',timeout=15000)
 
         delayed['path']='/administration'
-        page.goto('https://testserver/admin/users')
+        with page.expect_request('**/administration'):
+            page.goto('https://testserver/admin/users')
         expect(page.locator('#user-directory #users-loading')).to_be_visible()
         delayed['path']=None;fulfill(delayed['routes'].pop())
         expect(page.locator('#new-user')).to_be_enabled()
@@ -46,7 +47,7 @@ def test_slow_requests_dropdown_and_loader_cleanup(system):
                 metrics=select.evaluate('e=>{const s=getComputedStyle(e);return {height:e.clientHeight,line:parseFloat(s.lineHeight)||parseFloat(s.fontSize)*1.5,top:parseFloat(s.paddingTop),bottom:parseFloat(s.paddingBottom)}}')
                 assert metrics['height']>=metrics['line']+metrics['top']+metrics['bottom']
                 assert metrics['top']==metrics['bottom']
-                select.screenshot(path=str(Path(f'work/dropdown-592-{theme}-{width}.png').resolve()))
+                select.screenshot(path=str(Path(f'work/dropdown-594-{theme}-{width}.png').resolve()))
         page.set_viewport_size({'width':1440,'height':1000})
         page.get_by_role('button',name='Close User Details').click()
 
@@ -75,7 +76,13 @@ def test_slow_requests_dropdown_and_loader_cleanup(system):
         expect(page.locator('#history-dialog .loading-status')).to_be_visible()
         expect(page.locator('#history-dialog .window-close')).to_be_enabled()
         expect(page.locator('#history-dialog .window-statusbar')).to_be_visible()
-        page.locator('#history-dialog').screenshot(path=str(Path('work/history-loader-592.png').resolve()))
+        expect(page.locator('#history-dialog .loading-status')).to_have_class(__import__('re').compile('ui active inverted dimmer'))
+        overlay=page.locator('#history-dialog .loading-status').bounding_box()
+        header=page.locator('#history-dialog .window-titlebar').bounding_box()
+        footer=page.locator('#history-dialog .window-statusbar').bounding_box()
+        assert overlay['y']>=header['y']+header['height']-1
+        assert overlay['y']+overlay['height']<=footer['y']+1
+        page.locator('#history-dialog').screenshot(path=str(Path('work/history-loader-594.png').resolve()))
         delayed['routes'].pop().fulfill(status=500,content_type='application/json',body='{"detail":"Unavailable"}')
         expect(page.locator('#history-message')).to_contain_text('History unavailable')
         expect(page.locator('#history-dialog .loading-status')).to_have_count(0)
