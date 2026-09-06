@@ -1,5 +1,11 @@
 # Changelog
 
+## Dashboard 5.6.0 / API 4.1.0 — 6 September 2026
+
+- Replace the administrator user editor's photo URL field with the same hover Edit workflow as Settings: Gravatar toggle, upload and clear custom image.
+- Share the photo dialog and editor, enforce administrator permission for edits to another account, and preserve photos when saving unrelated user details. Photo changes save immediately; new users must be saved before photo editing.
+- Validated account permissions, upload/clear/Gravatar behaviour, photo preservation and unsaved form edits. Deployed all 42 runtime files and verified public assets and healthy service status; accounts, settings and history were preserved, with only the dashboard restarted.
+
 ## Dashboard 5.5.3 / API 4.1.0 — 6 September 2026
 
 - Give service lists visible theme-aware scrollbars. Place sticky column headings inside the same scroll area as the rows so Startup and Status remain aligned when scrollbars appear.

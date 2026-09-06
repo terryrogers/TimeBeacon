@@ -50,15 +50,36 @@ def install(app,backend):
 
     @app.post('/user/photo',include_in_schema=False)
     def upload(request:Request,body:Upload):
-        identity=user(request,True);data=sanitise_image(body.image)
+        identity=user(request,True)
+        return save_upload(identity['id'],body)
+
+    def save_upload(user_id,body):
+        data=sanitise_image(body.image)
         with backend.monitor.connect() as db:
-            db.execute("UPDATE users SET avatar_upload=?,photo='',version=version+1 WHERE id=?",(data,identity['id']))
-            return profile(db,identity['id'])
+            result=db.execute("UPDATE users SET avatar_upload=?,photo='',version=version+1 WHERE id=?",(data,user_id))
+            if not result.rowcount:raise HTTPException(404,'User not found')
+            return profile(db,user_id)
 
     @app.patch('/user/photo',include_in_schema=False)
     def options(request:Request,body:Options):
         identity=user(request,True)
+        return save_options(identity['id'],body)
+
+    def save_options(user_id,body):
         with backend.monitor.connect() as db:
-            db.execute('UPDATE users SET gravatar_enabled=?,version=version+1 WHERE id=?',(body.gravatar_enabled,identity['id']))
-            if body.clear:db.execute("UPDATE users SET avatar_upload=NULL,photo='' WHERE id=?",(identity['id'],))
-            return profile(db,identity['id'])
+            result=db.execute('UPDATE users SET gravatar_enabled=?,version=version+1 WHERE id=?',(body.gravatar_enabled,user_id))
+            if not result.rowcount:raise HTTPException(404,'User not found')
+            if body.clear:db.execute("UPDATE users SET avatar_upload=NULL,photo='' WHERE id=?",(user_id,))
+            return profile(db,user_id)
+
+    @app.post('/administration/users/{user_id}/photo',include_in_schema=False)
+    def admin_upload(request:Request,user_id:int,body:Upload):
+        identity=user(request,True)
+        IdentityStore(backend.monitor).require(identity,'admin')
+        return save_upload(user_id,body)
+
+    @app.patch('/administration/users/{user_id}/photo',include_in_schema=False)
+    def admin_options(request:Request,user_id:int,body:Options):
+        identity=user(request,True)
+        IdentityStore(backend.monitor).require(identity,'admin')
+        return save_options(user_id,body)

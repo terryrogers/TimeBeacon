@@ -444,9 +444,14 @@ def install(app, backend):
                 ).fetchone()[0]
             )
             db.execute(
-                "UPDATE users SET name=?,email=?,avatar_upload=CASE WHEN photo<>? THEN NULL ELSE avatar_upload END,photo=? WHERE id=?",
-                (body.name, body.email, body.photo, body.photo, user_id),
+                "UPDATE users SET name=?,email=? WHERE id=?",
+                (body.name, body.email, user_id),
             )
+            if 'photo' in body.model_fields_set:
+                db.execute(
+                    "UPDATE users SET avatar_upload=CASE WHEN photo<>? THEN NULL ELSE avatar_upload END,photo=? WHERE id=?",
+                    (body.photo, body.photo, user_id),
+                )
             if body.id is None:
                 db.execute(
                     "UPDATE users SET location=? WHERE id=?",

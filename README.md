@@ -2,7 +2,7 @@
 
 Precision-time monitoring for Linux NTP/Chrony servers: system metrics, service health, GPS/PPS reception, time acquisition, time clients and personal world clocks.
 
-Dashboard **5.5.3** · API **4.1.0** · Copyright (c) 2026 Terry Rogers · MIT License.
+Dashboard **5.6.0** · API **4.1.0** · Copyright (c) 2026 Terry Rogers · MIT License.
 
 ## Setup
 
@@ -30,7 +30,7 @@ History defaults to the last 60 minutes. Dates accept Unix seconds or ISO 8601 w
 
 Semantic UI 2.5.0 styles and icon fonts are bundled locally under `static/vendor/semantic` with their MIT license. Daylight and Midnight themes follow each signed-in user's sunrise and sunset. The anonymous sign-in page uses the browser's colour preference. Administration has dedicated overview, user directory, role and service-health pages. Dialog titles and status bars remain outside their scrolling content area.
 
-Hover over your photo in Settings and select Edit to toggle Gravatar, upload a PNG/JPEG/WebP image, or clear a custom image. Uploads are limited to 4 MB and 16 megapixels, resized to at most 512 pixels, re-encoded as PNG without metadata using Pillow, and stored in the user's SQLite profile. Photo reads require the owning account or administrator permission. Existing administrator-managed HTTPS photos remain supported. When enabled and no custom image is present, Gravatar uses the email's SHA-256 URL and loads in the browser. Get my location requests browser permission, reverse-geocodes rounded coordinates using OpenStreetMap Nominatim, and stores the nearest town/city and coordinates in that user's SQLite settings. Coordinates are not displayed as editable fields. Geocoding is cached for 30 days and rate-limited across workers.
+Hover over your photo in Settings and select Edit to toggle Gravatar, upload a PNG/JPEG/WebP image, or clear a custom image. Uploads are limited to 4 MB and 16 megapixels, resized to at most 512 pixels, re-encoded as PNG without metadata using Pillow, and stored in the user's SQLite profile. Photo reads require the owning account or administrator permission. Administration → Users → Edit uses the same photo controls for the selected account; photo changes save immediately and do not discard unsaved user details. Save new users before editing their photo. Existing HTTPS photos are preserved until cleared or replaced. When enabled and no custom image is present, Gravatar uses the email's SHA-256 URL and loads in the browser. Get my location requests browser permission, reverse-geocodes rounded coordinates using OpenStreetMap Nominatim, and stores the nearest town/city and coordinates in that user's SQLite settings. Coordinates are not displayed as editable fields. Geocoding is cached for 30 days and rate-limited across workers.
 
 Two-factor registration uses a locally generated QR code and TOTP-compatible authenticator apps. Setup must be confirmed before activation. Eight single-use recovery codes are displayed once; only hashes are retained. Login is throttled and accepted TOTP steps cannot be reused. Secrets are encrypted with a generated `identity.key` alongside the SQLite database. **Back up this key together with the database** and protect both; losing the key prevents verification of registered authenticators. Account passwords, API keys and QR secrets must never be committed. Existing accounts and historic samples are preserved by additive migrations.
 
