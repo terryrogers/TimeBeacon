@@ -1,5 +1,11 @@
 # Changelog
 
+## Dashboard 5.6.1 / API 4.1.0 — 6 September 2026
+
+- Limit desktop World Clocks to six cards per row; wrap additional clocks onto subsequent rows. Use three, two or one column on smaller screens.
+- Preload city-photo metadata and image bytes when adding a clock in Settings with backgrounds enabled, warming the server and browser caches before returning to the dashboard. Show preparation and ready feedback; photo failures leave the clock saved.
+- Five focused tests passed, including image preload completion and cached metadata; verified eight-clock layouts from 390px through 1920px. Installed files and public assets match the source, live health is healthy, and accounts/settings/history were preserved.
+
 ## Dashboard 5.6.0 / API 4.1.0 — 6 September 2026
 
 - Replace the administrator user editor's photo URL field with the same hover Edit workflow as Settings: Gravatar toggle, upload and clear custom image.

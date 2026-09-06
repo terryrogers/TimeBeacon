@@ -2,12 +2,13 @@ from pathlib import Path
 from unittest.mock import patch
 from playwright.sync_api import sync_playwright, expect
 from test_access import system
+from test_avatars import photo_bytes
 
 
 def test_client_palette_and_searchable_clock_navigation(system):
     m, client = system
     root = Path(__file__).resolve().parents[1]
-    with sync_playwright() as p, patch("access_api.city_image", return_value=None):
+    with sync_playwright() as p, patch("access_api.city_image", side_effect=lambda monitor,zone,city=None: {'image_url':'https://upload.wikimedia.org/test-clock.png'} if zone=='Asia/Kathmandu' else None):
         browser = p.chromium.launch(channel="msedge", headless=True)
         page = browser.new_page(viewport={"width": 1440, "height": 1000})
         errors = []
@@ -31,6 +32,11 @@ def test_client_palette_and_searchable_clock_navigation(system):
 
         page.route("**/*", route)
         page.route("https://gravatar.com/**", lambda r: r.abort())
+        warmed_images=[]
+        def clock_image(route):
+            warmed_images.append(route.request.url)
+            route.fulfill(status=200,content_type='image/png',headers={'Cache-Control':'public, max-age=3600'},body=photo_bytes())
+        page.route('https://upload.wikimedia.org/test-clock.png',clock_image)
         page.goto("https://testserver/")
         page.locator("[name=username]").fill("admin")
         page.locator("[name=password]").fill("admin")
@@ -58,8 +64,9 @@ def test_client_palette_and_searchable_clock_navigation(system):
         item.click()
         page.get_by_role("button", name="Add Clock", exact=True).click()
         expect(page.locator("#clock-feedback")).to_have_text(
-            "Clock added to your account."
+            "Clock added to your account. City background ready."
         )
+        assert warmed_images==['https://upload.wikimedia.org/test-clock.png']
         assert (
             page.locator("#clock-backgrounds").bounding_box()["y"]
             > page.locator("#clock-form").bounding_box()["y"]
