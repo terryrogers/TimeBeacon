@@ -10,6 +10,7 @@ function renderLocation(profile){
     locationReference=profile.reference_clock;
     document.getElementById('reference-clock').hidden=!locationReference;
     renderReferenceClock();
+    refreshLocationBackground();
 }
 function renderReferenceClock(){
     if(!locationReference)return;
@@ -17,7 +18,22 @@ function renderReferenceClock(){
     const time=new Intl.DateTimeFormat('en-GB',{timeZone:zone,hour:'numeric',minute:'2-digit',second:'2-digit',hour12:true}).format(now);
     const date=new Intl.DateTimeFormat('en-GB',{timeZone:zone,dateStyle:'medium'}).format(now);
     const offset=new Intl.DateTimeFormat('en',{timeZone:zone,timeZoneName:'longOffset'}).formatToParts(now).find(part=>part.type==='timeZoneName').value.replace('GMT','UTC ').trim();
-    document.getElementById('reference-clock').textContent='Reference Clock · '+locationReference.city+' · '+time+' · '+date+' · '+zone+' ('+(offset==='UTC'?'UTC +00:00':offset)+')';
+    const clock=document.getElementById('reference-clock'),flag=document.createElement('i');flag.className=locationReference.country_code+' flag';flag.setAttribute('aria-label',locationReference.country_code.toUpperCase());
+    clock.replaceChildren(flag,document.createTextNode('Reference Clock · '+locationReference.city+' · '+time+' · '+date+' · '+zone+' ('+(offset==='UTC'?'UTC +00:00':offset)+')'));
+}
+let referencePhotoRequest=0;
+async function refreshLocationBackground(){
+    const request=++referencePhotoRequest,panel=document.getElementById('daylight-display');
+    panel.querySelectorAll('.daylight-photo,.reference-photo-button').forEach(node=>node.remove());
+    if(!locationReference||!document.getElementById('clock-backgrounds').checked)return;
+    try{
+        const {image:photo}=await accessRequest('/user/location/image');
+        if(!photo||request!==referencePhotoRequest)return;
+        const image=document.createElement('img');image.className='daylight-photo';image.alt='';image.referrerPolicy='no-referrer';image.setAttribute('aria-hidden','true');
+        const credit=document.createElement('button');credit.type='button';credit.className='ui icon button reference-photo-button';credit.textContent='ⓘ';credit.setAttribute('aria-label','Reference Clock Photo Credit');credit.hidden=true;
+        credit.onclick=()=>{const content=document.getElementById('reference-photo-credit');content.replaceChildren();for(const value of [photo.city,photo.artist,photo.credit,photo.license]){if(value){const p=document.createElement('p');p.textContent=value;content.append(p);}}const link=document.createElement('a');link.href=photo.source_url;link.textContent='Original Photograph And Licence On Wikimedia Commons';link.target='_blank';link.rel='noopener noreferrer';content.append(link);document.getElementById('reference-photo-dialog').showModal();};
+        image.onload=()=>credit.hidden=false;image.onerror=()=>{image.remove();credit.remove();};image.src=photo.image_url;panel.prepend(image);panel.append(credit);
+    }catch{/* Optional photographs do not block account settings. */}
 }
 async function refreshLocation(){const profile=await accessRequest('/user/profile');renderLocation(profile);await applyTheme();}
 function initialiseLocationSettings(){

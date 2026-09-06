@@ -33,8 +33,14 @@ def policy(monitor):
 
 
 def fingerprint(db, user_id):
-    row = db.execute('SELECT password,totp,email,require_2fa FROM users WHERE id=?', (user_id,)).fetchone()
-    return digest(json.dumps(row)) if row else ''
+    row = db.execute('SELECT password,totp,email,require_2fa,require_password_change FROM users WHERE id=?', (user_id,)).fetchone()
+    if not row:
+        return ''
+    # Preserve existing 5.8 challenges/reset links for unchanged accounts.
+    values = list(row[:4])
+    if row[4]:
+        values.append(row[4])
+    return digest(json.dumps(values))
 
 
 def challenge(db, monitor, request, kind):
@@ -62,6 +68,24 @@ def revoke_credentials(db, user_id):
     db.execute('DELETE FROM api_keys WHERE user_id=?', (user_id,))
 
 
+def restricted_response(db, user, kind):
+    token = secrets.token_urlsafe(32)
+    db.execute('INSERT INTO auth_challenges VALUES (?,?,?,?,?)', (digest(token), user['id'], fingerprint(db, user['id']), kind, int(time.time())+600))
+    response = JSONResponse({'success': True, 'stage': kind})
+    response.delete_cookie('timebeacon_session', path='/')
+    response.set_cookie(CHALLENGE_COOKIE, token, httponly=True, secure=True, samesite='strict', max_age=600, path='/')
+    return response
+
+
+def after_verification(db, monitor, user):
+    totp, required, password_required = db.execute('SELECT totp,require_2fa,require_password_change FROM users WHERE id=?', (user['id'],)).fetchone()
+    if password_required:
+        return restricted_response(db, user, 'password-change')
+    if not totp and (required or policy(monitor).get('enforce_2fa')):
+        return restricted_response(db, user, 'enroll')
+    return session_response(db, user)
+
+
 def begin_login(monitor, request, username, password):
     store = IdentityStore(monitor)
     store.same_origin(request)
@@ -77,15 +101,7 @@ def begin_login(monitor, request, username, password):
         db.execute('DELETE FROM sessions WHERE token=?', (digest(request.cookies.get('timebeacon_session', '')),))
         db.execute('DELETE FROM auth_challenges WHERE expires<? OR token=?', (time.time(), digest(request.cookies.get(CHALLENGE_COOKIE, ''))))
         totp, required = db.execute('SELECT totp,require_2fa FROM users WHERE id=?', (user['id'],)).fetchone()
-        if not totp and not required and not policy(monitor).get('enforce_2fa'):
-            return session_response(db, user)
-        kind = 'factor' if totp else 'enroll'
-        token = secrets.token_urlsafe(32)
-        db.execute('INSERT INTO auth_challenges VALUES (?,?,?,?,?)', (digest(token), user['id'], fingerprint(db, user['id']), kind, int(time.time())+600))
-    response = JSONResponse({'success': True, 'stage': kind})
-    response.delete_cookie('timebeacon_session', path='/')
-    response.set_cookie(CHALLENGE_COOKIE, token, httponly=True, secure=True, samesite='strict', max_age=600, path='/')
-    return response
+        return restricted_response(db, user, 'factor') if totp else after_verification(db, monitor, user)
 
 
 class Factor(BaseModel):
@@ -99,6 +115,10 @@ class ForgotPassword(BaseModel):
 
 class ResetPassword(BaseModel):
     token: str = Field(min_length=20, max_length=100)
+    password: str = Field(min_length=8, max_length=256)
+
+
+class RequiredPassword(BaseModel):
     password: str = Field(min_length=8, max_length=256)
 
 
@@ -145,7 +165,21 @@ def install(app, backend):
             else:
                 store().verify_second_factor(db, user['id'], body.code)
             db.execute('DELETE FROM auth_challenges WHERE token=?', (digest(request.cookies.get(CHALLENGE_COOKIE, '')),))
-            return session_response(db, user)
+            return after_verification(db, backend.monitor, user)
+
+    @app.post('/auth/change-required-password', include_in_schema=False)
+    def change_required_password(request: Request, body: RequiredPassword):
+        limited_challenge(request, 'password-change')
+        from security import password_ok
+        with backend.monitor.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            user = challenge(db, backend.monitor, request, 'password-change')
+            old = db.execute('SELECT password FROM users WHERE id=?', (user['id'],)).fetchone()[0]
+            if password_ok(body.password, old):
+                raise HTTPException(422, 'Choose a different password')
+            db.execute('UPDATE users SET password=?,require_password_change=0 WHERE id=?', (password_hash(body.password), user['id']))
+            revoke_credentials(db, user['id'])
+            return after_verification(db, backend.monitor, user)
 
     @app.post('/auth/enrollment/start', include_in_schema=False)
     def enrollment_start(request: Request):
@@ -188,13 +222,14 @@ def install(app, backend):
         throttle(backend.monitor, 'forgot-name:'+digest(body.username.casefold()), 3, 900)
         with backend.monitor.connect() as db:
             db.execute('BEGIN IMMEDIATE')
-            row = db.execute('SELECT id,email FROM users WHERE username=? AND enabled=1', (body.username,)).fetchone()
+            row = db.execute('SELECT id,email,name FROM users WHERE username=? AND enabled=1', (body.username,)).fetchone()
             if row and row[1]:
                 token = secrets.token_urlsafe(32)
                 db.execute('DELETE FROM password_resets WHERE expires<? OR user_id=?', (time.time(), row[0]))
                 db.execute('INSERT INTO password_resets VALUES (?,?,?,?)', (digest(token), row[0], fingerprint(db, row[0]), int(time.time())+900))
                 url = mail_delivery.configuration(backend.monitor)['public_url']+'/login#reset='+token
-                tasks.add_task(mail_delivery.safe_send, backend.monitor, row[1], 'Reset Your TimeBeacon Password', 'A password reset was requested for your TimeBeacon account.\n\nOpen this link within 15 minutes:\n'+url+'\n\nThis link can be used once. If you did not request this, ignore this email. Your authenticator remains enabled.')
+                subject, text = mail_delivery.render_template(backend.monitor, 'password_reset', username=body.username, name=row[2] or body.username, link=url, expires='15 minutes')
+                tasks.add_task(mail_delivery.safe_send, backend.monitor, row[1], subject, text)
         return {'message': 'If that account has an email address, a password reset link will be sent. Check your inbox.'}
 
     @app.post('/auth/reset-password', include_in_schema=False)
@@ -208,7 +243,7 @@ def install(app, backend):
             if not row or row[2] <= time.time() or row[1] != fingerprint(db, row[0]):
                 raise HTTPException(401, 'This reset link is invalid or expired. Request a new one.')
             store().identity(db, row[0])
-            db.execute('UPDATE users SET password=? WHERE id=?', (hashed_password, row[0]))
+            db.execute('UPDATE users SET password=?,require_password_change=0 WHERE id=?', (hashed_password, row[0]))
             revoke_credentials(db, row[0])
         response = JSONResponse({'message': 'Password reset. Sign in with your new password.'})
         response.delete_cookie('timebeacon_session', path='/')

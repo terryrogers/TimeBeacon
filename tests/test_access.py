@@ -73,7 +73,7 @@ def system(tmp_path):
     ), patch("access_api.system_information", return_value={
         "operating_system": "Debian GNU/Linux 13 (trixie, 64-bit)",
         "hardware": "Raspberry Pi 5 (2.4 GHz Quad-Core, 16 GB RAM, 256 GB NVMe)",
-    }):
+    }), patch('places.city_image', return_value=None):
         yield m, TestClient(main.app, base_url="https://testserver")
 
 

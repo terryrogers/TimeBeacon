@@ -11,6 +11,7 @@ from zoneinfo import ZoneInfo
 from fastapi import HTTPException, Query, Request
 from pydantic import BaseModel
 from security import IdentityStore
+from city_images import city_image
 
 
 def normalise(value):
@@ -59,7 +60,8 @@ def reference(location):
     except (KeyError, ValueError):
         return None
     offset = now.strftime('%z')
-    return dict(city=city, timezone=zone, utc='UTC ' + offset[:3] + ':' + offset[3:])
+    country = location.get('country_code') or nearest(location['latitude'], location['longitude'])['country_code']
+    return dict(city=city, country_code=country, timezone=zone, utc='UTC ' + offset[:3] + ':' + offset[3:])
 
 
 class PlaceChoice(BaseModel):
@@ -77,6 +79,14 @@ def install(app, backend):
         if mutate:
             store.same_origin(request)
         return user
+
+    @app.get('/user/location/image', include_in_schema=False)
+    def location_image(request: Request):
+        user = identity(request)
+        clock = reference(user['location'])
+        if not user['clock_backgrounds'] or not clock:
+            return {'image': None}
+        return {'image': city_image(backend.monitor, clock['timezone'], clock['city'])}
 
     @app.get('/user/locations/search', include_in_schema=False)
     def search(request: Request, q: str = Query(min_length=2, max_length=100)):

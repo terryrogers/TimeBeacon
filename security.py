@@ -84,6 +84,7 @@ CREATE TABLE IF NOT EXISTS city_images(zone TEXT PRIMARY KEY,payload TEXT NOT NU
                 "location": "TEXT NOT NULL DEFAULT '{}'",
                 "totp": "TEXT NOT NULL DEFAULT ''",
                 "require_2fa": "INTEGER NOT NULL DEFAULT 0",
+                "require_password_change": "INTEGER NOT NULL DEFAULT 0",
                 "totp_pending": "TEXT NOT NULL DEFAULT ''",
                 "totp_pending_until": "INTEGER NOT NULL DEFAULT 0",
                 "totp_last": "INTEGER NOT NULL DEFAULT -1",
@@ -242,6 +243,8 @@ CREATE TABLE IF NOT EXISTS city_images(zone TEXT PRIMARY KEY,payload TEXT NOT NU
             )
         with self.monitor.connect() as db:
             enrolled, required = db.execute('SELECT totp,require_2fa FROM users WHERE id=?', (user['id'],)).fetchone()
+            if db.execute('SELECT require_password_change FROM users WHERE id=?', (user['id'],)).fetchone()[0]:
+                raise HTTPException(403, 'Password change required. Sign in again.')
         if not enrolled and (required or self.monitor.get_settings()['settings'].get('security', {}).get('enforce_2fa', False)):
             raise HTTPException(403, 'Authenticator setup required. Sign in again to register.')
         if api or authorization:

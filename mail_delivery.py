@@ -2,6 +2,7 @@
 import logging
 import smtplib
 import ssl
+import html
 from email.message import EmailMessage
 from urllib.parse import urlsplit
 from fastapi import HTTPException, Request
@@ -9,6 +10,11 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from security import IdentityStore
 
 logger = logging.getLogger(__name__)
+CONTENT_DEFAULTS = dict(message_type='plain', footer='',
+    new_user_subject='Welcome to TimeBeacon',
+    new_user_body='Hello {name},\n\nYour TimeBeacon account ({username}) is ready to set up. Choose your password using this single-use link within {expires}:\n{link}\n\nIf you were not expecting this invitation, contact your administrator.',
+    password_reset_subject='Reset Your TimeBeacon Password',
+    password_reset_body='Hello {name},\n\nA password reset was requested for your TimeBeacon account. Open this single-use link within {expires}:\n{link}\n\nIf you did not request this, ignore this email. Your authenticator remains enabled.')
 
 
 def valid_address(value):
@@ -28,18 +34,31 @@ class EmailConfiguration(BaseModel):
     from_email: str = Field(max_length=254)
     from_name: str = Field(default='TimeBeacon', max_length=120)
     public_url: str = Field(max_length=500)
+    message_type: str = Field(default='plain', pattern=r'^(plain|html)$')
+    footer: str = Field(default='', max_length=4000)
+    new_user_subject: str = Field(default=CONTENT_DEFAULTS['new_user_subject'], min_length=1, max_length=200)
+    new_user_body: str = Field(default=CONTENT_DEFAULTS['new_user_body'], min_length=1, max_length=12000)
+    password_reset_subject: str = Field(default=CONTENT_DEFAULTS['password_reset_subject'], min_length=1, max_length=200)
+    password_reset_body: str = Field(default=CONTENT_DEFAULTS['password_reset_body'], min_length=1, max_length=12000)
 
     @field_validator('from_email')
     @classmethod
     def email(cls, value):
         return valid_address(value)
 
-    @field_validator('from_name', 'username')
+    @field_validator('from_name', 'username', 'new_user_subject', 'password_reset_subject')
     @classmethod
     def no_newlines(cls, value):
         if '\r' in value or '\n' in value:
             raise ValueError('Line breaks are not allowed')
         return value.strip()
+
+    @field_validator('new_user_body', 'password_reset_body')
+    @classmethod
+    def includes_link(cls, value):
+        if '{link}' not in value:
+            raise ValueError('Include {link} so the recipient can set their password')
+        return value
 
     @field_validator('public_url')
     @classmethod
@@ -62,7 +81,17 @@ class TestEmail(BaseModel):
 
 
 def configuration(monitor):
-    return monitor.get_settings()['settings'].get('email', {})
+    return {**CONTENT_DEFAULTS, **monitor.get_settings()['settings'].get('email', {})}
+
+
+def render_template(monitor, kind, **values):
+    import re
+    config = configuration(monitor)
+    values['product'] = 'TimeBeacon'
+    def render(value):
+        return re.sub(r'\{(name|username|link|expires|product)\}', lambda match: str(values.get(match[1], '')), value)
+    subject = render(config[kind+'_subject']).replace('\r', ' ').replace('\n', ' ')
+    return subject, render(config[kind+'_body'])
 
 
 def ready(monitor):
@@ -80,7 +109,16 @@ def send_message(monitor, recipient, subject, text):
     message['From'] = formataddr((config.get('from_name', 'TimeBeacon'), config['from_email']))
     message['To'] = recipient
     message['Subject'] = subject
+    footer = config.get('footer', '').strip()
+    if footer:
+        text += '\n\n' + footer
     message.set_content(text)
+    if config.get('message_type') == 'html':
+        # Templates are text, not executable HTML. Escape all account fields and footer.
+        import re
+        parts = re.split(r'''(https://[^\s<>"']+)''', text)
+        content = ''.join('<a href="'+html.escape(part, quote=True)+'">'+html.escape(part)+'</a>' if i % 2 else html.escape(part).replace('\n', '<br>') for i,part in enumerate(parts))
+        message.add_alternative('<!doctype html><html><body><div style="font-family:Arial,sans-serif;line-height:1.6">'+content+'</div></body></html>', subtype='html')
     context = ssl.create_default_context()
     factory = smtplib.SMTP_SSL if config['security'] == 'ssl' else smtplib.SMTP
     options = {'timeout': 15}
@@ -118,7 +156,7 @@ def install(app, backend):
     def get_email(request: Request):
         admin(request)
         state = backend.monitor.get_settings()
-        values = state['settings'].get('email', {}).copy()
+        values = {**CONTENT_DEFAULTS, **state['settings'].get('email', {})}
         values['password_set'] = bool(values.pop('password_encrypted', ''))
         return {'version': state['version'], 'settings': values, 'configured': ready(backend.monitor)}
 

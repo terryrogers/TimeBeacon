@@ -2,7 +2,7 @@
 
 Precision-time monitoring for Linux NTP/Chrony servers: system metrics, service health, GPS/PPS reception, time acquisition, time clients and personal world clocks.
 
-Dashboard **5.8.0** · API **4.1.0** · Copyright (c) 2026 Terry Rogers · MIT License.
+Dashboard **5.9.0** · API **4.1.0** · Copyright (c) 2026 Terry Rogers · MIT License.
 
 ## Setup
 
@@ -21,6 +21,12 @@ Service Health lists installed service units and loaded/transient services under
 The built-in User role grants dashboard, server/time status and history, world-clock viewing and time-client summaries. It cannot access Administration, individual clients, clock amendments or the API unless a configured role grants those permissions. Controls are hidden in the UI and the server independently denies unauthorized requests.
 
 ## Sign-in and Recovery
+
+Administration → Users offers **Set Password Now** or **Email Temporary Setup Link** when adding an account. Set Password Now supports Require Password Change At Next Sign-In. A restricted sign-in prevents dashboard/API access until the new password is saved; enrolled accounts verify their authenticator first, and mandatory enrollment still applies afterwards. Existing sessions and API keys cannot bypass a required password change. The role selector is a single-selection dropdown, defaulting to User.
+
+Email setup links require a configured mail service and an enabled new account. The New User template sends a single-use link valid for 24 hours; the user chooses a password and then signs in normally. No initial password is emailed or displayed. Expired or undelivered invitations can be replaced using Forgotten Password. Accounts created with Set Password Now do not send an automatic invitation.
+
+Administration → Email includes Message Type (Plain Text or HTML), a shared Email Footer, and editable New User and Password Reset subjects/bodies. Supported fields are `{name}`, `{username}`, `{link}`, `{expires}` and `{product}`; both template bodies must retain `{link}`. Templates are text: HTML delivery safely formats their text/line breaks and HTTPS links, with a plain-text alternative. Arbitrary HTML entered in templates/footer is escaped. The footer is appended to test, invitation, password-reset and recovery-administrator messages. Save before using Send Test Email.
 
 Sign-in first checks username and password. Accounts with an authenticator then receive a separate verification screen; No Authenticator Code offers a single-use recovery code or an email request to the configured recovery administrator. An unfinished sign-in has no dashboard, account or API access. Challenges expire after ten minutes and are rate limited.
 
@@ -45,6 +51,8 @@ See [API reference](docs/API.md) and the instance's /docs OpenAPI interface. Sig
 History defaults to the last 60 minutes. Dates accept Unix seconds or ISO 8601 with an explicit timezone. API arrays contain original samples with bounded pagination; graph displays select representative samples for long periods. Null values and gaps represent unavailable measurements.
 
 ## Appearance and account security
+
+The reference clock displays its country flag. With Show City Backgrounds enabled, the whole Daylight & Display panel uses the reference city's cached photograph and a photo-credit dialog. It follows the same faint light/dark opacity, attribution and failure fallback as world clocks. Disabling backgrounds or clearing the location removes it immediately. A missing photograph leaves the normal panel visible.
 
 Settings → Daylight & Display offers a local type-to-search catalogue of 170,942 towns and cities beside Get My Location. Search by city, country or region; results show country flags and IANA time zones. Selecting a result saves that town's coordinates to the account and displays a live reference clock. Clear Location reveals the manual Light/Dark toggle; the preference survives reloads and is shared by that account's browsers. Selecting or detecting a location restores automatic sunrise/sunset mode. Device-location reference clocks use the nearest catalogued settlement's time zone, while daylight calculations retain device coordinates. Near time-zone borders this is a town-based reference, not a boundary lookup.
 

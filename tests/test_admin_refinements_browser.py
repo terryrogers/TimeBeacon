@@ -134,12 +134,11 @@ def test_service_transfer_account_defaults_and_alignment(system):
             expect(required).to_have_class(__import__('re').compile('required'))
             assert required.locator('label').evaluate("e=>getComputedStyle(e,'::after').content") == '"*"'
         assert form.evaluate("e=>!e.checkValidity()")
-        page.locator("#user-roles input[value=Administrator]").check()
-        expect(page.locator("#user-roles input[value=User]")).not_to_be_checked()
-        page.locator("#user-roles input[value=User]").check()
-        expect(
-            page.locator("#user-roles input[value=Administrator]")
-        ).not_to_be_checked()
+        expect(page.locator('#user-roles')).to_have_value('User')
+        page.locator('#user-roles').select_option('Administrator')
+        expect(page.locator('#user-roles')).to_have_value('Administrator')
+        page.locator('#user-roles').select_option('User')
+        assert not page.locator('#user-roles').evaluate('e=>e.multiple')
         for field, value in [
             ("name", "Test Person"),
             ("username", "new-person"),

@@ -1,5 +1,13 @@
 # Changelog
 
+## Dashboard 5.9.0 / API 4.1.0 — 6 September 2026
+
+- Add the reference-clock flag and a matching optional city photograph across Daylight & Display, with attribution and immediate background-preference updates.
+- Add plain-text/HTML message selection, a common email footer, and New User/Password Reset template editors.
+- Add new-account setup choices: set a password with an optional mandatory change at next sign-in, or email a single-use 24-hour password setup link.
+- Require password changes before full session/API access while retaining authenticator verification and mandatory enrollment.
+- Replace account role checkboxes with a single-selection dropdown defaulting to User.
+
 ## Dashboard 5.8.0 / API 4.1.0 — 6 September 2026
 
 - Separate password sign-in from authenticator verification, with a dedicated recovery-code or administrator assistance screen.

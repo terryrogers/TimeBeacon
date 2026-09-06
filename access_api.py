@@ -9,7 +9,7 @@ import time
 from datetime import datetime, timezone
 from typing import Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
-from fastapi import HTTPException, Request, Query
+from fastapi import HTTPException, Request, Query, BackgroundTasks
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
 from security import IdentityStore, PERMISSIONS, digest, password_hash, password_ok
@@ -39,6 +39,8 @@ class UserInput(ProfileInput):
     password: str | None = Field(default=None, min_length=8, max_length=256)
     roles: list[str] = Field(min_length=1, max_length=1)
     enabled: bool = False
+    onboarding: Literal['password', 'invite'] = 'password'
+    force_password_change: bool = False
 
     @model_validator(mode='after')
     def required_new_details(self):
@@ -379,9 +381,17 @@ def install(app, backend):
         return {"success": True}
 
     @app.put("/administration/users", include_in_schema=False)
-    def save_user(request: Request, body: UserInput):
+    def save_user(request: Request, body: UserInput, tasks: BackgroundTasks):
         who(request, "admin")
         store().mutation(request)
+        import mail_delivery
+        if body.onboarding == 'invite':
+            if body.id is not None:
+                raise HTTPException(422, 'Setup links are for new accounts')
+            if not body.enabled:
+                raise HTTPException(422, 'Enable the account before sending a setup link')
+            if not mail_delivery.ready(backend.monitor):
+                raise HTTPException(422, 'Configure Administration Email before sending a setup link')
         with backend.monitor.connect() as db:
             db.execute("BEGIN IMMEDIATE")
             known = {r[0] for r in db.execute("SELECT name FROM roles")}
@@ -393,13 +403,13 @@ def install(app, backend):
             if duplicate and duplicate[0] != body.id:
                 raise HTTPException(409, "Username already exists")
             if body.id is None:
-                if not body.password:
+                if not body.password and body.onboarding != 'invite':
                     raise HTTPException(422, "A password is required for a new account")
                 db.execute(
                     "INSERT INTO users(username,password,roles,enabled,clocks) VALUES (?,?,?,?,?)",
                     (
                         body.username,
-                        password_hash(body.password),
+                        password_hash(secrets.token_urlsafe(48) if body.onboarding == 'invite' else body.password),
                         json.dumps(body.roles),
                         body.enabled,
                         "[]",
@@ -447,7 +457,16 @@ def install(app, backend):
                     ),
                 )
             store().keep_admin(db)
-        return {"success": True}
+            if body.password or body.id is None:
+                db.execute('UPDATE users SET require_password_change=? WHERE id=?', (bool(body.force_password_change or body.onboarding == 'invite'), user_id))
+            if body.onboarding == 'invite':
+                from auth_flows import fingerprint
+                token = secrets.token_urlsafe(32)
+                db.execute('INSERT INTO password_resets VALUES (?,?,?,?)', (digest(token), user_id, fingerprint(db,user_id), int(time.time())+86400))
+                url = mail_delivery.configuration(backend.monitor)['public_url']+'/login#reset='+token
+                subject, text = mail_delivery.render_template(backend.monitor, 'new_user', name=body.name, username=body.username, link=url, expires='24 hours')
+                tasks.add_task(mail_delivery.safe_send, backend.monitor, body.email, subject, text)
+        return {"success": True, "message": 'User saved. A single-use setup link will be emailed.' if body.onboarding == 'invite' else 'User saved.'}
 
     @app.put("/administration/config", include_in_schema=False)
     def save_config(request: Request, body: ConfigInput):
