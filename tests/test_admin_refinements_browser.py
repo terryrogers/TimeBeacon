@@ -16,7 +16,7 @@ def test_service_transfer_account_defaults_and_alignment(system):
             {'name':'ssh.service','startup':'enabled','status':'active / running'},
         ],
     ), patch("access_api.city_image", return_value=None):
-        browser = p.chromium.launch(channel="msedge", headless=True)
+        browser = p.chromium.launch(channel="msedge", headless=True, ignore_default_args=['--hide-scrollbars'])
         page = browser.new_page(viewport={"width": 1440, "height": 1000})
         errors = []
         page.on("pageerror", lambda e: errors.append(str(e)))
@@ -88,6 +88,29 @@ def test_service_transfer_account_defaults_and_alignment(system):
             full_page=True,
             animations="disabled",
         )
+        # Exercise real scrollbar widths; the small service fixture does not overflow.
+        page.evaluate("""() => document.querySelectorAll('.service-list').forEach(list => {
+            for(let i=0;i<35;i++)list.append(list.firstElementChild.cloneNode(true));
+        })""")
+        for width in [1440, 390]:
+            page.set_viewport_size({'width':width,'height':1000})
+            for theme in ['light','dark']:
+                page.evaluate('(theme)=>document.documentElement.dataset.theme=theme',theme)
+                for scroll in page.locator('.service-list-scroll').all():
+                    assert scroll.evaluate('e=>e.scrollHeight>e.clientHeight')
+                    colour=scroll.evaluate('e=>getComputedStyle(e).scrollbarColor')
+                    assert colour != 'auto' and 'rgb(0, 0, 0)' not in colour
+                    for header, field in [(2,'.service-startup'),(3,'.service-current')]:
+                        h=scroll.locator('.service-list-heading span').nth(header-1).bounding_box()
+                        cell=scroll.locator(field).first.bounding_box()
+                        assert abs(h['x']+h['width']-cell['x']-cell['width'])<1
+                    heading=scroll.locator('.service-list-heading')
+                    before=heading.bounding_box()['y']
+                    scroll.evaluate('e=>e.scrollTop=120')
+                    assert abs(heading.bounding_box()['y']-before)<1
+                    scroll.evaluate('e=>e.scrollTop=0')
+                if width==1440:
+                    page.screenshot(path=str(root/f'work/services-553-{theme}.png'),full_page=True,animations='disabled')
         page.set_viewport_size({"width": 390, "height": 844})
         assert page.evaluate("document.documentElement.scrollWidth<=innerWidth")
         page.set_viewport_size({"width": 1440, "height": 1000})

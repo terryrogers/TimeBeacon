@@ -1,5 +1,10 @@
 # Changelog
 
+## Dashboard 5.5.3 / API 4.1.0 — 6 September 2026
+
+- Give service lists visible theme-aware scrollbars. Place sticky column headings inside the same scroll area as the rows so Startup and Status remain aligned when scrollbars appear.
+- Browser checks passed with overflowing lists in both themes at desktop and mobile widths. Verified column alignment, sticky headings and service transfers. Deployed files and public assets match; live health is healthy and accounts/settings/history were preserved.
+
 ## Dashboard 5.5.2 / API 4.1.0 — 6 September 2026
 
 - Add a country flag before each world clock country name using the bundled Semantic UI flags and existing timezone country mapping.
