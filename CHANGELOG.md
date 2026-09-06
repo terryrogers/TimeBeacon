@@ -1,5 +1,12 @@
 # Changelog
 
+## Dashboard 5.5.1 / API 4.1.0 — 6 September 2026
+
+- Shorten the API key clipboard countdown to 30 seconds, retaining conditional clearance and blocked-access retry.
+- Fix the profile photo Edit control remaining transparent on hover: hover and keyboard-focus styles now override its hidden state.
+- Reproduced the defect with an opacity assertion, then verified visible hover and keyboard focus in both themes and that the photo editor opens.
+- Four focused browser tests passed. Deployed and verified all runtime files and public assets; live health is healthy, with accounts/settings/history preserved and only the dashboard restarted.
+
 ## Dashboard 5.5.0 / API 4.1.0 — 6 September 2026
 
 - Style World Clocks Manage as a button aligned to the final tile, rename User Settings to Settings, and apply title case across interface headings, labels and buttons.

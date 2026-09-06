@@ -14,7 +14,7 @@ function initialiseKeyClipboard(){
     async function copy(){
         if(!secret)return;
         retry.disabled=true;
-        try{await navigator.clipboard.writeText(secret);deadline=Date.now()+60000;retry.hidden=true;clearInterval(timer);timer=setInterval(check,1000);await check();}
+        try{await navigator.clipboard.writeText(secret);deadline=Date.now()+30000;retry.hidden=true;clearInterval(timer);timer=setInterval(check,1000);await check();}
         catch{output.textContent='The key was created, but clipboard access was blocked. Select Copy Key to retry; the key is never displayed.';retry.textContent='Copy Key';retry.hidden=false;}
         finally{retry.disabled=false;}
     }

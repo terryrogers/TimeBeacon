@@ -2,7 +2,7 @@
 
 Precision-time monitoring for Linux NTP/Chrony servers: system metrics, service health, GPS/PPS reception, time acquisition, time clients and personal world clocks.
 
-Dashboard **5.5.0** · API **4.1.0** · Copyright (c) 2026 Terry Rogers · MIT License.
+Dashboard **5.5.1** · API **4.1.0** · Copyright (c) 2026 Terry Rogers · MIT License.
 
 ## Setup
 
@@ -14,7 +14,7 @@ SQLite defaults to data/history.sqlite3; NTP_DASHBOARD_HISTORY_DB can override i
 
 ## Access control
 
-Administration creates/updates users and roles, assigns one role per account, disables accounts, resets passwords, and configures health checks and client thresholds. New accounts require Name, Username and Email Address, and Account Enabled is off by default. Selecting another role deselects the previous one. Existing account assignments are preserved until edited; permissions are evaluated on every request and at least one enabled administrator must remain. Settings manages name, email, profile photo (Gravatar by default), daylight location, personal clocks, password, authenticator registration and API keys. Keys inherit current account permissions and can be revoked individually. New keys are copied directly to the clipboard and never rendered in the page. A 60-second countdown precedes conditional clearance: replacement clipboard content is preserved. Keep the page open and allow clipboard access; denied or unfocused access shows a pending status and retries on return. Closing the page prevents its timer from running.
+Administration creates/updates users and roles, assigns one role per account, disables accounts, resets passwords, and configures health checks and client thresholds. New accounts require Name, Username and Email Address, and Account Enabled is off by default. Selecting another role deselects the previous one. Existing account assignments are preserved until edited; permissions are evaluated on every request and at least one enabled administrator must remain. Settings manages name, email, profile photo (Gravatar by default), daylight location, personal clocks, password, authenticator registration and API keys. Keys inherit current account permissions and can be revoked individually. New keys are copied directly to the clipboard and never rendered in the page. A 30-second countdown precedes conditional clearance: replacement clipboard content is preserved. Keep the page open and allow clipboard access; denied or unfocused access shows a pending status and retries on return. Closing the page prevents its timer from running.
 
 Service Health lists installed service units and loaded/transient services under Available Services, excluding those already selected under Monitored Services. Select one or more entries, use the arrow buttons to move them, then Save Services. This changes health monitoring without starting or stopping services. At least one service must remain monitored. Both lists show startup type and current systemd status in aligned columns. Inventory access requires administrator permission.
 
