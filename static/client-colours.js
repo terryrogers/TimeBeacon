@@ -21,7 +21,7 @@ function applyClientColours(palette) {
 function initialiseClientColours(palette) {
     const root=document.getElementById('client-colour-fields');if(!root)return;
     const mode=document.getElementById('client-colour-mode');mode.checked=palette.mode==='dark';
-    function update(){document.getElementById('client-colour-mode-label').textContent=mode.checked?'Dark mode':'Light mode';for(const row of root.children){row.querySelector('.colour-preview').style.background=row.querySelector('[data-colour=background]').value;row.querySelector('.colour-preview').style.color=row.querySelector('[data-colour=foreground]').value;}}
+    function update(){document.getElementById('client-colour-mode-label').textContent=mode.checked?'Dark Mode':'Light Mode';for(const row of root.children){row.querySelector('.colour-preview').style.background=row.querySelector('[data-colour=background]').value;row.querySelector('.colour-preview').style.color=row.querySelector('[data-colour=foreground]').value;}}
     for(const [state,title] of [['healthy','Healthy'],['warning','Warning'],['critical','Critical'],['unknown','Unknown']]){
         const row=document.createElement('div');row.className='client-colour-row';row.dataset.state=state;
         const preview=document.createElement('strong');preview.className='colour-preview';preview.textContent=title;row.append(preview);

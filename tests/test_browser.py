@@ -11,6 +11,7 @@ def test_authenticated_dashboard_and_admin(system):
     with sync_playwright() as p:
         browser = p.chromium.launch(channel="msedge", headless=True)
         page = browser.new_page(viewport={"width": 1440, "height": 1000})
+        page.add_init_script("Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{window.__testClipboard=text},readText:async()=>window.__testClipboard||''}})")
         errors = []
         page.on("pageerror", lambda e: errors.append(str(e)))
 
@@ -77,7 +78,7 @@ def test_authenticated_dashboard_and_admin(system):
         page.evaluate("document.documentElement.dataset.theme='light'")
         page.get_by_role("button", name="Administration", exact=True).click()
         page.get_by_role("link", name="Users", exact=True).click()
-        page.get_by_role("button", name="New user", exact=True).click()
+        page.get_by_role("button", name="New User", exact=True).click()
         expect(page.locator("#edit-user-dialog")).to_be_visible()
         page.locator("#admin-user-form [name=username]").fill("viewer")
         page.locator('#admin-user-form [name=name]').fill('Test Viewer')
@@ -122,37 +123,40 @@ def test_authenticated_dashboard_and_admin(system):
         assert before["y"] == after["y"]
         footer = page.locator("#history-dialog .window-statusbar").bounding_box()
         assert footer["y"] + footer["height"] <= 1000
-        page.get_by_role("button", name="Close graph").click()
-        page.get_by_role("button", name="User Settings", exact=True).click()
+        page.get_by_role("button", name="Close Graph").click()
+        page.get_by_role("button", name="Settings", exact=True).click()
         page.wait_for_selector("#location-label")
         expect(page.locator("input[name=latitude]")).to_have_count(0)
         page.context.grant_permissions(["geolocation"])
         page.context.set_geolocation({"latitude": 53.4808, "longitude": -2.2426})
-        page.get_by_role("button", name="Get my location", exact=True).click()
+        page.get_by_role("button", name="Get My Location", exact=True).click()
         expect(page.locator("#location-label")).to_have_text("Manchester")
         page.locator("#profile-form [name=name]").fill("Terry Rogers")
-        page.get_by_role("button", name="Save profile", exact=True).click()
+        page.get_by_role("button", name="Save Profile", exact=True).click()
         expect(page.locator("#page-feedback")).to_have_text("Profile saved.")
         page.locator("#two-factor-form [name=password]").fill("admin")
-        page.get_by_role("button", name="Register authenticator", exact=True).click()
+        page.get_by_role("button", name="Register Authenticator", exact=True).click()
         expect(page.locator("#two-factor-dialog")).to_be_visible()
         expect(page.locator("#enrollment-qr")).to_be_visible()
-        page.get_by_role("button", name="Close registration").click()
+        page.get_by_role("button", name="Close Registration").click()
         expect(page.locator("#enrollment-secret")).to_be_empty()
         page.locator('#clock-picker input.search').fill('UTC')
         page.locator('#clock-picker .menu .item[data-value="UTC"]').click()
-        page.get_by_role("button", name="Add clock", exact=True).click()
+        page.get_by_role("button", name="Add Clock", exact=True).click()
         expect(page.locator("#clock-feedback")).to_have_text(
             "Clock added to your account."
         )
         page.locator("#key-form [name=name]").fill("browser test")
         page.locator("#key-form button").click()
         page.wait_for_function(
-            "document.getElementById('new-key').textContent.includes('Copy now')"
+            "document.getElementById('new-key').textContent.includes('API key copied')"
         )
         page.get_by_role("button", name="Revoke", exact=True).click()
         expect(page.locator("#key-list button")).to_have_count(0)
-        page.get_by_role("button", name="Sign out", exact=True).click()
+        page.evaluate("window.__testClipboard='replacement'")
+        page.clock.install();page.clock.fast_forward(61000)
+        expect(page.locator('#new-key')).to_contain_text('Clipboard changed')
+        page.get_by_role("button", name="Sign Out", exact=True).click()
         expect(page.locator("#login-form")).to_be_visible()
         expect(page.locator("#system-cpu")).to_have_count(0)
         page.locator("#login-form [name=username]").fill("viewer")
@@ -168,7 +172,7 @@ def test_authenticated_dashboard_and_admin(system):
         expect(page.locator("#clients-count")).to_have_text("1")
         expect(page.locator("#client-grid")).not_to_be_visible()
         assert page.locator(".client-card").count() == 0
-        page.get_by_role("button", name="User Settings", exact=True).click()
+        page.get_by_role("button", name="Settings", exact=True).click()
         expect(page.locator("#clock-form")).not_to_be_visible()
         expect(page.locator("#key-section")).not_to_be_visible()
         expect(page.locator("#clock-settings-list")).to_be_empty()

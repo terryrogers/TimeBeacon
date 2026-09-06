@@ -63,7 +63,7 @@ function configureClocks() {
 
     });
 }
-const GRAPH_METRICS={gps_used:["Satellites used",""],gps_visible:["Satellites visible",""],gps_mode:["GPS fix mode",""],gps_pps:["PPS receiving (1=yes, 0=no)",""],gps_hdop:["Horizontal dilution of precision",""],gps_tdop:["Time dilution of precision",""],cpu:["CPU","%"],ram:["RAM","%"],storage:["Storage","%"],temperature:["CPU Temperature","°C"],stratum:["Stratum",""],last_offset:["Last Offset","ms"],rms_offset:["RMS Offset","ms"],ntp_rtt:["NTP RTT","ms"]};
+const GRAPH_METRICS={gps_used:["Satellites Used",""],gps_visible:["Satellites Visible",""],gps_mode:["GPS Fix Mode",""],gps_pps:["PPS Receiving (1=yes, 0=no)",""],gps_hdop:["Horizontal Dilution Of Precision",""],gps_tdop:["Time Dilution Of Precision",""],cpu:["CPU","%"],ram:["RAM","%"],storage:["Storage","%"],temperature:["CPU Temperature","°C"],stratum:["Stratum",""],last_offset:["Last Offset","ms"],rms_offset:["RMS Offset","ms"],ntp_rtt:["NTP RTT","ms"]};
 function configureGraphs() {
     document.getElementById("history-duration").addEventListener("change",event=>{
         graphPreset=event.target.value;
@@ -110,8 +110,8 @@ async function showGraph(key, reset=true) {
                 const gps=sample.gps || {},values=[sample.acquisition?.selected ?? "Unavailable",gps.fix ?? "Unavailable",gps.used ?? "Unavailable",gps.visible ?? "Unavailable",gps.pps === undefined ? "Unavailable" : gps.pps ? "Receiving" : "No PPS"];
                 const signature=JSON.stringify(values);if(signature!==previous){rows.push([graphDate(sample.timestamp*1000),...values]);previous=signature;}
             }
-            const heading=document.createElement("h3");heading.textContent="GPS and time acquisition changes in displayed samples";
-            document.getElementById("history-details").append(heading,dataTable(["Time","Selected source","GPS fix","Used","Visible","PPS"],rows));
+            const heading=document.createElement("h3");heading.textContent="GPS And Time Acquisition Changes In Displayed Samples";
+            document.getElementById("history-details").append(heading,dataTable(["Time","Selected Source","GPS Fix","Used","Visible","PPS"],rows));
         }
         const samples=payload.samples.filter(s => s.timestamp>=start && Number.isFinite(s.metrics[key]));
         if(!samples.length) {message.textContent="No samples available for this period."; document.getElementById("history-gap").textContent="Gaps indicate unavailable data."; return;}
@@ -215,20 +215,20 @@ function showAcquisition(key) {
     document.getElementById("acquisition-title").textContent=titles[key];content.replaceChildren();
     if(acquisitionData.stale){content.textContent="Monitoring data is stale.";dialog.showModal();return;}
     if(key==="satellites") {
-        content.append(dataTable(["Satellite ID","GNSS ID","Elevation °","Azimuth °","Signal strength","Used in fix"],(gps.satellites || []).map(s=>[s.svid ?? s.PRN,s.gnssid,s.el,s.az,s.ss,s.used ? "Yes":"No"])));
-        content.append(dataTable(["Dilution of precision","Value"],Object.entries(gps.dop || {})));
+        content.append(dataTable(["Satellite ID","GNSS ID","Elevation °","Azimuth °","Signal Strength","Used In Fix"],(gps.satellites || []).map(s=>[s.svid ?? s.PRN,s.gnssid,s.el,s.az,s.ss,s.used ? "Yes":"No"])));
+        content.append(dataTable(["Dilution Of Precision","Value"],Object.entries(gps.dop || {})));
     } else if(key==="fix") {
-        const names={time:"GPS time (UTC)",mode:"Fix mode",eph:"Horizontal error (m)",epv:"Vertical error (m)",ept:"Time error (s)"};
+        const names={time:"GPS Time (UTC)",mode:"Fix Mode",eph:"Horizontal Error (m)",epv:"Vertical Error (m)",ept:"Time Error (s)"};
         content.append(dataTable(["Measurement","Value"],Object.entries(gps.fix_details || {}).map(([name,value])=>[names[name] || name,value])));
     } else if(key==="pps") {
-        content.append(dataTable(["GPSD PPS field","Value"],Object.entries(gps.pps_details || {})));
+        content.append(dataTable(["GPSD PPS Field","Value"],Object.entries(gps.pps_details || {})));
     } else {
-        content.append(dataTable(["Source","State","Stratum","Reach","Last RX","Measured offset (s)"],(acq.sources || []).map(s=>[s.name,s.state==="*" ? "Selected":s.state,s.stratum,s.reach,s.last_rx,s.measured_offset])));
+        content.append(dataTable(["Source","State","Stratum","Reach","Last RX","Measured Offset (s)"],(acq.sources || []).map(s=>[s.name,s.state==="*" ? "Selected":s.state,s.stratum,s.reach,s.last_rx,s.measured_offset])));
     }
     if(!content.querySelector("tbody tr"))content.textContent="No detailed reports available yet.";
     const histories={fix:["gps_mode","gps_hdop"],satellites:["gps_used","gps_visible","gps_hdop","gps_tdop"],pps:["gps_pps"],time:["last_offset","rms_offset","ntp_rtt"]};
     const controls=document.createElement("div");controls.className="acquisition-history-controls";
-    for(const metric of histories[key]) {const button=document.createElement("button");button.type="button";button.textContent=GRAPH_METRICS[metric][0]+" history";button.addEventListener("click",()=>showGraph(metric));controls.append(button);}
+    for(const metric of histories[key]) {const button=document.createElement("button");button.type="button";button.className="ui button";button.textContent=GRAPH_METRICS[metric][0]+" History";button.addEventListener("click",()=>showGraph(metric));controls.append(button);}
     content.append(controls);
     dialog.showModal();
 }

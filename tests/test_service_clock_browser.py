@@ -89,7 +89,7 @@ def test_repair_dialog_personal_photos_and_panel_layout(system):
         expect(page.locator('#city-photo-dialog .window-close')).to_have_css('padding','0px')
         expect(page.locator('#city-photo-dialog .window-close')).to_have_css('justify-content','center')
         page.screenshot(path=str(Path(__file__).resolve().parents[1]/'work/city-citation-53.png'),animations='disabled')
-        page.get_by_role("button", name="Close photo credit").click()
+        page.get_by_role("button", name="Close Photo Credit").click()
         page.locator("#service-details-button").click()
         expect(
             page.get_by_role("button", name="Fix missing.service", exact=True)
@@ -101,14 +101,14 @@ def test_repair_dialog_personal_photos_and_panel_layout(system):
         expect(page.locator("#service-repair-message")).to_contain_text(
             "does not install"
         )
-        page.get_by_role("button", name="Remove health check", exact=True).click()
+        page.get_by_role("button", name="Remove Health Check", exact=True).click()
         expect(page.locator("#service-repair-message")).to_contain_text(
             "Health check removed"
         )
         assert m.get_settings()["settings"]["services"] == ["chrony.service"]
         command.assert_not_called()
-        page.get_by_role("button", name="Close service repair").click()
-        page.get_by_role("button", name="Close service details").click()
+        page.get_by_role("button", name="Close Service Repair").click()
+        page.get_by_role("button", name="Close Service Details").click()
         root = Path(__file__).resolve().parents[1]
         for theme in ("light", "dark"):
             page.evaluate(
@@ -123,7 +123,7 @@ def test_repair_dialog_personal_photos_and_panel_layout(system):
             > page.locator(".system-information").nth(0).bounding_box()["y"]
         )
         assert page.evaluate("document.documentElement.scrollWidth<=innerWidth")
-        page.get_by_role("button", name="User Settings", exact=True).click()
+        page.get_by_role("button", name="Settings", exact=True).click()
         expect(page.locator("#clock-backgrounds")).to_be_checked()
         page.locator("#clock-backgrounds").uncheck()
         expect(page.locator("#clock-background-feedback")).to_have_text(

@@ -38,8 +38,8 @@
 <button class="ui button" id="settings-button" type="button">
      Administration
     </button>
-<button class="ui button" id="user-settings-button" type="button">User Settings</button>
-<button class="ui button" id="logout-button" type="button">Sign out</button>
+<button class="ui button" id="user-settings-button" type="button">Settings</button>
+<button class="ui button" id="logout-button" type="button">Sign Out</button>
 <span class="muted" id="solar-summary">
      Automatic daylight theme
     </span>
@@ -200,7 +200,7 @@
 <summary>
 <h2>
       World Clocks
-     </h2><a class="world-manage" href="/user-settings#user-clocks">Manage</a>
+     </h2><a class="world-manage ui button" href="/user-settings#user-clocks">Manage</a>
 </summary>
 
 
@@ -288,13 +288,13 @@
 
 
 
-<dialog aria-labelledby="history-title" class="ui modal window" id="history-dialog"><div class="window-titlebar"><h2 id="history-title"></h2><form class="ui form" method="dialog"><button aria-label="Close graph" class="window-close ui button">×</button></form></div><div class="window-content">
+<dialog aria-labelledby="history-title" class="ui modal window" id="history-dialog"><div class="window-titlebar"><h2 id="history-title"></h2><form class="ui form" method="dialog"><button aria-label="Close Graph" class="window-close ui button">×</button></form></div><div class="window-content">
 
 <p id="history-message" role="status"></p>
 <svg aria-label="Selected history period" id="history-graph" role="img" viewbox="0 0 900 320">
 </svg>
 <div class="history-controls-scroll"><div class="history-controls">
-<label>History length <select class="ui dropdown" id="history-duration"><option disabled="" hidden="" value="custom">Custom period</option><option value="15">15 Minutes</option><option value="30">30 Minutes</option><option selected="" value="60">60 Minutes</option><option value="120">2 Hours</option><option value="240">4 Hours</option><option value="480">8 Hours</option><option value="960">16 Hours</option><option value="1440">24 Hours</option><option value="all">All of Time</option></select></label>
+<label>History Length <select class="ui dropdown" id="history-duration"><option disabled="" hidden="" value="custom">Custom Period</option><option value="15">15 Minutes</option><option value="30">30 Minutes</option><option selected="" value="60">60 Minutes</option><option value="120">2 Hours</option><option value="240">4 Hours</option><option value="480">8 Hours</option><option value="960">16 Hours</option><option value="1440">24 Hours</option><option value="all">All Of Time</option></select></label>
 <label>From <input id="history-start" type="datetime-local"/></label>
 <label>To <input id="history-end" type="datetime-local"/></label>
 </div></div>
@@ -309,7 +309,7 @@
 <dialog aria-labelledby="services-title" class="ui modal window" id="service-details-dialog"><div class="window-titlebar"><h2 id="services-title">
     Server Status Details
    </h2><form class="ui form" method="dialog">
-<button aria-label="Close service details" class="ui button window-close">×</button>
+<button aria-label="Close Service Details" class="ui button window-close">×</button>
 </form></div><div class="window-content">
 
 
@@ -342,21 +342,21 @@
 </table>
 </div>
 <h3>
-    Additional health checks
+    Additional Health Checks
    </h3>
 <ul id="health-check-details">
 </ul>
 </div><div class="window-statusbar"><span id="service-action-feedback" role="status"></span><span>TimeBeacon</span></div></dialog>
 <dialog aria-labelledby="acquisition-title" class="ui modal window" id="acquisition-dialog"><div class="window-titlebar"><h2 id="acquisition-title">
 </h2><form class="ui form" method="dialog">
-<button aria-label="Close acquisition details" class="ui button window-close">×</button>
+<button aria-label="Close Acquisition Details" class="ui button window-close">×</button>
 </form></div><div class="window-content">
 
 
 <div id="acquisition-content">
 </div>
 </div><div class="window-statusbar"><span></span><span>TimeBeacon</span></div></dialog>
-<dialog class="ui modal window" id="service-repair-dialog" aria-labelledby="service-repair-title"><div class="window-titlebar"><h2 id="service-repair-title">Fix service</h2><form method="dialog"><button class="ui icon button window-close" aria-label="Close service repair">×</button></form></div><div class="window-content"><h3 id="service-repair-unit"></h3><p id="service-repair-message" role="status"></p><button type="button" class="ui primary button" id="service-repair-confirm" hidden>Confirm</button></div><div class="window-statusbar"><span>Administrator service control</span><span>TimeBeacon</span></div></dialog>
-<dialog class="ui modal window" id="city-photo-dialog" aria-labelledby="city-photo-title"><div class="window-titlebar"><h2 id="city-photo-title">City photograph</h2><form method="dialog"><button class="ui icon button window-close" aria-label="Close photo credit">×</button></form></div><div class="window-content" id="city-photo-content"></div><div class="window-statusbar"><span>Photograph displayed faintly and cropped to fit</span><span>Wikimedia Commons</span></div></dialog>
+<dialog class="ui modal window" id="service-repair-dialog" aria-labelledby="service-repair-title"><div class="window-titlebar"><h2 id="service-repair-title">Fix Service</h2><form method="dialog"><button class="ui icon button window-close" aria-label="Close Service Repair">×</button></form></div><div class="window-content"><h3 id="service-repair-unit"></h3><p id="service-repair-message" role="status"></p><button type="button" class="ui primary button" id="service-repair-confirm" hidden>Confirm</button></div><div class="window-statusbar"><span>Administrator service control</span><span>TimeBeacon</span></div></dialog>
+<dialog class="ui modal window" id="city-photo-dialog" aria-labelledby="city-photo-title"><div class="window-titlebar"><h2 id="city-photo-title">City Photograph</h2><form method="dialog"><button class="ui icon button window-close" aria-label="Close Photo Credit">×</button></form></div><div class="window-content" id="city-photo-content"></div><div class="window-statusbar"><span>Photograph displayed faintly and cropped to fit</span><span>Wikimedia Commons</span></div></dialog>
 </body>
 </html>

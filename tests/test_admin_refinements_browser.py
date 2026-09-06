@@ -10,7 +10,11 @@ def test_service_transfer_account_defaults_and_alignment(system):
     root = Path(__file__).resolve().parents[1]
     with sync_playwright() as p, patch(
         "client_settings.system_services",
-        return_value=["chrony.service", "gpsd.service", "ssh.service"],
+        return_value=[
+            {'name':'chrony.service','startup':'enabled','status':'active / running'},
+            {'name':'gpsd.service','startup':'disabled','status':'inactive / dead'},
+            {'name':'ssh.service','startup':'enabled','status':'active / running'},
+        ],
     ), patch("access_api.city_image", return_value=None):
         browser = p.chromium.launch(channel="msedge", headless=True)
         page = browser.new_page(viewport={"width": 1440, "height": 1000})
@@ -60,19 +64,25 @@ def test_service_transfer_account_defaults_and_alignment(system):
                     "rgba(0, 0, 0, 0.95)",
                 ]
         page.get_by_role("link", name="Service Health", exact=True).click()
-        expect(page.locator("#available-services option")).to_have_count(2)
-        expect(page.locator("#monitored-services option")).to_have_count(1)
-        page.locator("#available-services").select_option("gpsd.service")
-        page.get_by_role("button", name="Monitor selected services", exact=True).click()
-        page.locator("#monitored-services").select_option("chrony.service")
+        expect(page.locator("#available-services input")).to_have_count(2)
+        expect(page.locator("#monitored-services input")).to_have_count(1)
+        expect(page.locator('#monitored-services .service-startup')).to_have_text('enabled')
+        expect(page.locator('#monitored-services .service-current')).to_have_text('active / running')
+        gps_row=page.locator('#available-services .service-choice').filter(has_text='gpsd.service')
+        expect(gps_row.locator('.service-startup')).to_have_text('disabled')
+        expect(gps_row.locator('.service-current')).to_have_text('inactive / dead')
+        page.locator('#available-services input[value="gpsd.service"]').check()
+        page.get_by_role("button", name="Monitor Selected Services", exact=True).click()
+        page.locator('#monitored-services input[value="chrony.service"]').check()
         page.get_by_role(
-            "button", name="Stop monitoring selected services", exact=True
+            "button", name="Stop Monitoring Selected Services", exact=True
         ).click()
         page.get_by_role("button", name="Save Services", exact=True).click()
         expect(page.locator("#page-feedback")).to_have_text("Configuration saved.")
         assert m.get_settings()["settings"]["services"] == ["gpsd.service"]
         page.reload()
         expect(page.locator("#monitored-services")).to_contain_text("gpsd.service")
+        expect(page.locator('#monitored-services .service-current')).to_have_text('inactive / dead')
         page.screenshot(
             path=str(root / "work/service-picker-54.png"),
             full_page=True,
@@ -89,12 +99,16 @@ def test_service_transfer_account_defaults_and_alignment(system):
             page.get_by_role("heading", name="Role Permissions", exact=True)
         ).to_be_visible()
         page.get_by_role("link", name="Users", exact=True).click()
-        page.get_by_role("button", name="New user", exact=True).click()
+        page.get_by_role("button", name="New User", exact=True).click()
         expect(page.locator("#edit-user-dialog")).to_be_visible()
         expect(
             page.get_by_role("checkbox", name="Account Enabled", exact=True)
         ).not_to_be_checked()
         form = page.locator("#admin-user-form")
+        for field in ['name','username','email','password']:
+            required=page.locator('#admin-user-form [name='+field+']').locator('..')
+            expect(required).to_have_class(__import__('re').compile('required'))
+            assert required.locator('label').evaluate("e=>getComputedStyle(e,'::after').content") == '"*"'
         assert form.evaluate("e=>!e.checkValidity()")
         page.locator("#user-roles input[value=Administrator]").check()
         expect(page.locator("#user-roles input[value=User]")).not_to_be_checked()

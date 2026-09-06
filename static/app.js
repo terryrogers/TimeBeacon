@@ -892,7 +892,7 @@ async function loadCityBackground(card,item) {
         const {image:photo}=await accessRequest("/dashboard/clocks/image?zone="+encodeURIComponent(item.zone));
         if(!photo || !card.isConnected || !settings.clock_backgrounds)return;
         const image=document.createElement("img");image.className="clock-city-background";image.alt="";image.setAttribute("aria-hidden","true");image.loading="lazy";image.referrerPolicy="no-referrer";
-        const credit=uiButton("ⓘ",()=>showCityPhotoCredit(photo));credit.className="ui icon button clock-photo-credit";credit.setAttribute("aria-label","Photo credit for "+item.name);credit.title="Photo credit";credit.hidden=true;
+        const credit=uiButton("ⓘ",()=>showCityPhotoCredit(photo));credit.className="ui icon button clock-photo-credit";credit.setAttribute("aria-label","Photo Credit for "+item.name);credit.title="Photo Credit";credit.hidden=true;
         image.onload=()=>{credit.hidden=false;};image.onerror=()=>{image.remove();credit.remove();};image.src=photo.image_url;card.prepend(image);card.append(credit);
     } catch { /* Photos are optional; clocks remain usable when imagery is unavailable. */ }
 }

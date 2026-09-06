@@ -1,5 +1,14 @@
 # Changelog
 
+## Dashboard 5.5.0 / API 4.1.0 — 6 September 2026
+
+- Style World Clocks Manage as a button aligned to the final tile, rename User Settings to Settings, and apply title case across interface headings, labels and buttons.
+- Show startup type and current systemd status in both service-selection columns. Mark required new-user fields with an asterisk.
+- Display personal clocks with flags, timezone IDs and matching reference descriptions; align Add Clock beside the narrower picker.
+- Copy newly created API keys directly to the clipboard without displaying them. Show a 60-second countdown, clear only an unchanged key, and explain blocked clipboard access with retry behaviour.
+- Add a photo hover editor for Gravatar preferences, custom-photo removal and bounded PNG/JPEG/WebP uploads. Store sanitized thumbnails in SQLite with owner/admin access checks; preserve existing profiles through additive migrations.
+- Deployed after 42 local tests. Verified all 41 installed runtime files, public assets, 273 service inventory entries and the photo encoder as the application user. Health is healthy; accounts, clocks, settings and history were preserved. Only the dashboard restarted.
+
 ## Dashboard 5.4.0 / API 4.1.0 — 6 September 2026
 
 - Align World Clocks Manage at the right edge and centre the GitHub icon with footer text.

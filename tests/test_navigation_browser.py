@@ -56,7 +56,7 @@ def test_client_palette_and_searchable_clock_navigation(system):
             animations="disabled",
         )
         item.click()
-        page.get_by_role("button", name="Add clock", exact=True).click()
+        page.get_by_role("button", name="Add Clock", exact=True).click()
         expect(page.locator("#clock-feedback")).to_have_text(
             "Clock added to your account."
         )
@@ -71,8 +71,8 @@ def test_client_palette_and_searchable_clock_navigation(system):
         page.locator('[aria-label="Healthy background colour"]').fill("#224466")
         page.locator('[aria-label="Healthy text colour"]').fill("#ffffff")
         page.locator("#client-colour-mode").check(force=True)
-        expect(page.locator("#client-colour-mode-label")).to_have_text("Dark mode")
-        page.get_by_role("button", name="Save client settings", exact=True).click()
+        expect(page.locator("#client-colour-mode-label")).to_have_text("Dark Mode")
+        page.get_by_role("button", name="Save Client Settings", exact=True).click()
         expect(page.locator("#page-feedback")).to_have_text("Client settings saved.")
         page.screenshot(
             path=str(root / "work/client-settings-53.png"),

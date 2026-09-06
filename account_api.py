@@ -69,17 +69,19 @@ class Confirm(BaseModel):
 
 def profile(db, user_id):
     row = db.execute(
-        "SELECT name,email,photo,totp,location,clock_backgrounds FROM users WHERE id=?", (user_id,)
+        "SELECT name,email,photo,totp,location,clock_backgrounds,gravatar_enabled,avatar_upload,version FROM users WHERE id=?", (user_id,)
     ).fetchone()
     return dict(
         name=row[0],
         email=row[1],
         photo=row[2],
         two_factor=bool(row[3]),
-        avatar=row[2]
-        or "https://gravatar.com/avatar/"
+        avatar=(f'/user/avatar/{user_id}?v={row[8]}' if row[7] else row[2]
+        or ("https://gravatar.com/avatar/"
         + hashlib.sha256(row[1].strip().lower().encode()).hexdigest()
-        + "?s=160&d=mp",
+        + "?s=160&d=mp" if row[6] else '/static/avatar-default.svg')),
+        gravatar_enabled=bool(row[6]),
+        custom_photo=bool(row[7] or row[2]),
         location=json.loads(row[4]),
         clock_backgrounds=bool(row[5]),
     )
@@ -121,9 +123,11 @@ def install(app, backend):
         identity = user(request, True)
         with backend.monitor.connect() as db:
             db.execute(
-                "UPDATE users SET name=?,email=?,photo=? WHERE id=?",
-                (body.name, body.email, body.photo, identity["id"]),
+                "UPDATE users SET name=?,email=? WHERE id=?",
+                (body.name, body.email, identity["id"]),
             )
+            if 'photo' in body.model_fields_set:
+                db.execute('UPDATE users SET photo=?,avatar_upload=NULL,version=version+1 WHERE id=?', (body.photo,identity['id']))
             return profile(db, identity["id"])
 
     @app.post("/user/location", include_in_schema=False)

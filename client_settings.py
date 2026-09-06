@@ -8,8 +8,8 @@ import subprocess
 import re
 
 
-def system_services():
-    names = set()
+def system_services(details=False):
+    names = {}
     try:
         for command in ("list-unit-files", "list-units"):
             result = subprocess.run(
@@ -33,12 +33,15 @@ def system_services():
                 if fields and re.fullmatch(
                     r"[A-Za-z0-9_][A-Za-z0-9_.@:\\-]*\.service", fields[0]
                 ):
-                    names.add(fields[0])
+                    entry=names.setdefault(fields[0], {'name':fields[0], 'startup':'transient', 'status':'inactive'})
+                    if command=='list-unit-files':entry['startup']=fields[1] if len(fields)>1 else 'unknown'
+                    else:entry['status']=' / '.join(fields[2:4]) if len(fields)>3 else 'unknown'
     except (OSError, subprocess.SubprocessError):
         raise HTTPException(
             503, "Unable to load system services. Reload and try again."
         )
-    return sorted(names, key=str.casefold)
+    ordered=sorted(names,key=str.casefold)
+    return [names[name] for name in ordered] if details else ordered
 
 
 DEFAULT_COLOURS = {
@@ -103,8 +106,11 @@ def install(app, backend):
         store.require(store.authenticate(request), "admin")
         from telemetry import REQUIRED_SERVICES
 
+        inventory=system_services(details=True)
+        inventory=[row if isinstance(row,dict) else {'name':row,'startup':'unknown','status':'unknown'} for row in inventory]
         return {
-            "services": system_services(),
+            "services": [row['name'] for row in inventory],
+            "details": inventory,
             "monitored": backend.monitor.get_settings()["settings"].get(
                 "services", list(REQUIRED_SERVICES)
             ),

@@ -78,9 +78,9 @@ def test_service_inventory_combines_unit_files_and_transient_services(system):
             ),
         ],
     ) as command:
-        assert system_services() == [
-            "a.service",
-            "template@.service",
-            "transient.service",
+        assert system_services(details=True) == [
+            {'name':'a.service','startup':'enabled','status':'active / running'},
+            {'name':'template@.service','startup':'disabled','status':'inactive'},
+            {'name':'transient.service','startup':'transient','status':'inactive / dead'},
         ]
         assert command.call_count == 2

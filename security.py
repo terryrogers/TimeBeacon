@@ -75,6 +75,8 @@ CREATE TABLE IF NOT EXISTS city_images(zone TEXT PRIMARY KEY,payload TEXT NOT NU
                 "name": "TEXT NOT NULL DEFAULT ''",
                 "email": "TEXT NOT NULL DEFAULT ''",
                 "photo": "TEXT NOT NULL DEFAULT ''",
+                "gravatar_enabled": "INTEGER NOT NULL DEFAULT 1",
+                "avatar_upload": "BLOB",
                 "location": "TEXT NOT NULL DEFAULT '{}'",
                 "totp": "TEXT NOT NULL DEFAULT ''",
                 "totp_pending": "TEXT NOT NULL DEFAULT ''",

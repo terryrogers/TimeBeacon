@@ -34,7 +34,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 # ---------------------------------------------------------------------------
 
 BASE_DIR = Path(__file__).resolve().parent
-ASSET_VERSION = hashlib.sha256(b"".join((BASE_DIR / name).read_bytes() for name in ("static/app.js", "static/dashboard.js", "static/app.css", "static/access.js", "static/theme.css", "static/pages.js", "static/clock-picker.js", "static/client-colours.js", "static/timezones.json", "static/service-picker.js"))).hexdigest()[:12]
+ASSET_VERSION = hashlib.sha256(b"".join((BASE_DIR / name).read_bytes() for name in ("static/app.js", "static/dashboard.js", "static/app.css", "static/access.js", "static/theme.css", "static/pages.js", "static/clock-picker.js", "static/client-colours.js", "static/timezones.json", "static/service-picker.js", "static/key-clipboard.js", "static/photo-editor.js"))).hexdigest()[:12]
 
 CHRONYC = "/usr/bin/chronyc"
 
@@ -593,6 +593,8 @@ from service_repairs import install as install_service_repairs
 install_service_repairs(app, sys.modules[__name__])
 from client_settings import install as install_client_settings
 install_client_settings(app, sys.modules[__name__])
+from avatar_api import install as install_avatars
+install_avatars(app, sys.modules[__name__])
 
 @app.get('/login', include_in_schema=False)
 @app.get('/admin', include_in_schema=False)

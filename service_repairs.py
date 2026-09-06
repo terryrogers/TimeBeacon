@@ -49,11 +49,11 @@ def preview(monitor, unit):
     if unit not in config["settings"].get("services", REQUIRED_SERVICES):
         raise HTTPException(404, "This service is not included in health monitoring")
     state = inspect_service(unit)
-    action, label = None, "No action needed"
+    action, label = None, "No Action Needed"
     if state.get("ActiveState") == "active":
         message = "This service is already running. Health will refresh on the next collection."
     elif state.get("LoadState") in ("not-found", "masked"):
-        action, label = "remove_check", "Remove health check"
+        action, label = "remove_check", "Remove Health Check"
         reason = (
             "is not installed"
             if state["LoadState"] == "not-found"
@@ -67,7 +67,7 @@ def preview(monitor, unit):
         "inactive",
         "failed",
     ):
-        action, label = "start", "Start service"
+        action, label = "start", "Start Service"
         message = f"Start {unit} and check that it becomes active. Its startup configuration will stay unchanged."
     else:
         message = "This service is changing state or its configuration cannot be loaded. Inspect its configuration before trying again."

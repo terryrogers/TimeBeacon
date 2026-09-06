@@ -92,7 +92,7 @@ def test_missing_service_requires_explicit_monitoring_removal(system):
         "service_repairs.subprocess.run"
     ) as run:
         proposed = c.get(URL, params={"unit": "missing.service"}).json()
-        assert proposed["label"] == "Remove health check"
+        assert proposed["label"] == "Remove Health Check"
         assert "does not install" in proposed["message"]
         assert (
             c.post(URL, json={**body, "action": "start"}, headers=ORIGIN).status_code
