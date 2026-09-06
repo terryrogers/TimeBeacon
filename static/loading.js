@@ -1,7 +1,8 @@
 "use strict";
 // One delayed Semantic UI status per region, shared by overlapping operations.
 const loadingRegions=new Map();
-function beginLoading({target=null,label='Loading…'}={}) {
+function beginLoading({target=null,label='Loading…',silent=false}={}) {
+    if(silent)return ()=>{};
     let key=target||document.body;
     if(target){
         const parent=[...loadingRegions.keys()].find(region=>region!==document.body&&region.contains(target));

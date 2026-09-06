@@ -32,10 +32,10 @@ def test_slow_requests_dropdown_and_loader_cleanup(system):
 
         delayed['path']='/administration'
         page.goto('https://testserver/admin/users')
-        expect(page.locator('.loading-dock')).to_be_visible()
+        expect(page.locator('#user-directory #users-loading')).to_be_visible()
         delayed['path']=None;fulfill(delayed['routes'].pop())
         expect(page.locator('#new-user')).to_be_enabled()
-        expect(page.locator('.loading-status')).to_have_count(0)
+        expect(page.locator('.loading-status:not([hidden])')).to_have_count(0)
         page.locator('#new-user').click()
         expect(page.locator('#onboarding-method')).to_have_value('invite')
         for theme in ['light','dark']:
@@ -57,7 +57,7 @@ def test_slow_requests_dropdown_and_loader_cleanup(system):
         page.evaluate('finishA()')
         expect(page.locator('.page-content>.loading-status')).to_be_visible()
         page.evaluate('finishB()')
-        expect(page.locator('.loading-status')).to_have_count(0)
+        expect(page.locator('.loading-status:not([hidden])')).to_have_count(0)
         expect(page.locator('.page-content')).not_to_have_attribute('aria-busy','true')
 
         # An aborted network request must also remove its indicator.

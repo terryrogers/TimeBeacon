@@ -1,5 +1,11 @@
 # Changelog
 
+## Dashboard 5.9.3 / API 4.1.0 — 6 September 2026
+
+- Pre-cache the selected country’s town/city catalogue in the browser session; show local matches immediately and retain worldwide search.
+- Show immediate Semantic UI loaders beside city search and inside User Directory, including initial load, refresh and failure cleanup.
+- Cancel superseded searches and prevent older search/country responses from replacing the current results.
+
 ## Dashboard 5.9.2 / API 4.1.0 — 6 September 2026
 
 - Correct native dropdown height and text alignment to prevent clipped descenders.

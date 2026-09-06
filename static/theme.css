@@ -94,3 +94,7 @@ dialog.ui.modal.window{height:fit-content}.history-controls{min-width:100%;width
 .loading-status .ui.loader:after{border-top-color:var(--accent)}
 .clock-card>.loading-status{position:absolute;bottom:1.8rem;left:.5rem;right:.5rem;margin:0;font-size:.7rem}
 @media(prefers-reduced-motion:reduce){.loading-status .ui.loader:after{animation-duration:2s}}
+
+.explicit-loading{pointer-events:none;min-height:44px}#location-search-loading{margin:.75rem 0}#daylight-display>#location-search-loading{z-index:2}
+
+#location-picker.ui.loading.dropdown>.dropdown.icon:before{border-color:var(--border)}#location-picker.ui.loading.dropdown>.dropdown.icon:after{border-color:var(--accent) transparent transparent!important}

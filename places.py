@@ -30,6 +30,12 @@ def describe(row):
                 latitude=row[6], longitude=row[7], timezone=row[8])
 
 
+@lru_cache(maxsize=32)
+def country_places(code):
+    return [{**describe(row), 'search': text, 'city_search': city}
+            for row, text, city in catalogue() if row[3] == code]
+
+
 @lru_cache(maxsize=512)
 def nearest(latitude, longitude):
     lat = math.radians(latitude)
@@ -97,6 +103,12 @@ def install(app, backend):
         hits = [entry for entry in catalogue() if all(token in entry[1] for token in tokens)]
         hits.sort(key=lambda entry: (entry[2] != normalise(q), not entry[2].startswith(tokens[0])))
         return {'places': [describe(entry[0]) for entry in hits[:30]]}
+
+    @app.get('/user/locations/country', include_in_schema=False)
+    def country(request: Request, code: str = Query(pattern=r'^[A-Za-z]{2}$')):
+        identity(request)
+        code = code.lower()
+        return {'country_code': code, 'places': country_places(code)}
 
     @app.put('/user/location', include_in_schema=False)
     def select(request: Request, body: PlaceChoice):

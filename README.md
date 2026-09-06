@@ -2,7 +2,7 @@
 
 Precision-time monitoring for Linux NTP/Chrony servers: system metrics, service health, GPS/PPS reception, time acquisition, time clients and personal world clocks.
 
-Dashboard **5.9.2** · API **4.1.0** · Copyright (c) 2026 Terry Rogers · MIT License.
+Dashboard **5.9.3** · API **4.1.0** · Copyright (c) 2026 Terry Rogers · MIT License.
 
 ## Setup
 
