@@ -18,6 +18,8 @@ from account_api import ProfileInput, profile
 from server_info import system_information
 from city_images import city_image
 
+from client_settings import DEFAULT_CLOCKS
+
 
 class Login(BaseModel):
     username: str = Field(min_length=1, max_length=80)
@@ -197,6 +199,7 @@ def install(app, backend):
     def clock_settings(user):
         c = config()
         return {
+            "default_clocks": c.get("default_clocks", DEFAULT_CLOCKS),
             "version": user["version"],
             "config_version": backend.monitor.get_settings()["version"],
             "settings": {

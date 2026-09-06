@@ -1,5 +1,12 @@
 # Changelog
 
+## Dashboard 5.7.0 / API 4.1.0 — 6 September 2026
+
+- Add Administration → Defaults with six searchable city selectors and conflict-safe SQLite persistence. Existing user clocks remain unchanged.
+- Add Reset Clocks in both views, restoring the configured defaults only for the signed-in user.
+- Add drag handles and keyboard arrow reordering to dashboard cards and Settings rows, with immediate profile persistence and conflict feedback. Restore the top-right remove × on dashboard cards.
+- Apply visible themed scrollbars to World Clocks and its dropdown menus.
+
 ## Dashboard 5.6.1 / API 4.1.0 — 6 September 2026
 
 - Limit desktop World Clocks to six cards per row; wrap additional clocks onto subsequent rows. Use three, two or one column on smaller screens.

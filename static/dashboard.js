@@ -238,11 +238,11 @@ function configureAcquisition() {
     document.querySelectorAll("[data-acquisition]").forEach(card=>card.addEventListener("click",()=>showAcquisition(card.dataset.acquisition)));
 }
 
-let sharedVersion=0, sharedConfigVersion=0;
+let sharedVersion=0, sharedConfigVersion=0, systemDefaultClocks=[];
 function applySharedSettings(payload) {
     sharedVersion=payload.version;sharedConfigVersion=payload.config_version || 0;
     settings={location:payload.settings.location,latitude:payload.settings.latitude,longitude:payload.settings.longitude,clock_backgrounds:payload.settings.clock_backgrounds};
-    TIMEZONES=payload.settings.clocks;
+    TIMEZONES=payload.settings.clocks;systemDefaultClocks=payload.default_clocks||[];
     buildClocks();updateClocks();configureTheme();renderClockSettings();
 }
 async function loadSharedSettings() {

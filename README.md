@@ -2,7 +2,7 @@
 
 Precision-time monitoring for Linux NTP/Chrony servers: system metrics, service health, GPS/PPS reception, time acquisition, time clients and personal world clocks.
 
-Dashboard **5.6.1** · API **4.1.0** · Copyright (c) 2026 Terry Rogers · MIT License.
+Dashboard **5.7.0** · API **4.1.0** · Copyright (c) 2026 Terry Rogers · MIT License.
 
 ## Setup
 
@@ -19,6 +19,12 @@ Administration creates/updates users and roles, assigns one role per account, di
 Service Health lists installed service units and loaded/transient services under Available Services, excluding those already selected under Monitored Services. Select one or more entries, use the arrow buttons to move them, then Save Services. This changes health monitoring without starting or stopping services. At least one service must remain monitored. Both lists show startup type and current systemd status in aligned columns. Inventory access requires administrator permission.
 
 The built-in User role grants dashboard, server/time status and history, world-clock viewing and time-client summaries. It cannot access Administration, individual clients, clock amendments or the API unless a configured role grants those permissions. Controls are hidden in the UI and the server independently denies unauthorized requests.
+
+## World Clocks
+
+Administration → Defaults configures six distinct time zones, in display order. The initial selection is Los Angeles, New York, London, Dubai, Singapore and Sydney: major cities spread west to east across six time zones. This selection combines geographic coverage with [GaWC global-city classification](https://gawc.lboro.ac.uk/gawc-worlds/the-world-according-to-gawc/world-cities-2024/), rather than a population ranking.
+
+Reset Clocks in the dashboard or Settings replaces only the signed-in user's clocks with those six administration defaults. Saving defaults does not change existing personal clocks. Drag a clock's dotted handle to reorder it, or focus the handle and use arrow keys. The dashboard's top-right × removes that clock from the user's profile. Changes save immediately, require World Clocks amendment permission, and reject conflicting edits from another browser. Settings also retains its Remove buttons and image preloading when backgrounds are enabled. Scrollbars use the selected light/dark palette.
 
 ## API
 

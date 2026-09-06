@@ -6,6 +6,31 @@ from fastapi import Request, HTTPException
 from security import IdentityStore
 import subprocess
 import re
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+DEFAULT_CLOCKS = [
+    {'name': 'Los Angeles', 'zone': 'America/Los_Angeles'},
+    {'name': 'New York', 'zone': 'America/New_York'},
+    {'name': 'London', 'zone': 'Europe/London'},
+    {'name': 'Dubai', 'zone': 'Asia/Dubai'},
+    {'name': 'Singapore', 'zone': 'Asia/Singapore'},
+    {'name': 'Sydney', 'zone': 'Australia/Sydney'},
+]
+
+class ClockDefaults(BaseModel):
+    version: int
+    clocks: list[str] = Field(min_length=6, max_length=6)
+
+    @model_validator(mode="after")
+    def valid_clocks(self):
+        if len(set(self.clocks)) != 6:
+            raise ValueError("Choose six different time zones")
+        for zone in self.clocks:
+            try:
+                ZoneInfo(zone)
+            except (ZoneInfoNotFoundError, ValueError):
+                raise ValueError("Choose a valid time zone")
+        return self
 
 
 def system_services(details=False):
@@ -89,7 +114,6 @@ class Services(BaseModel):
     @model_validator(mode="after")
     def units(self):
         import re
-
         if any(
             not re.fullmatch(r"[A-Za-z0-9_][A-Za-z0-9_.@:\\-]*\.service", unit)
             or len(unit) > 200
@@ -100,6 +124,24 @@ class Services(BaseModel):
 
 
 def install(app, backend):
+    @app.get("/administration/defaults", include_in_schema=False)
+    def defaults(request: Request):
+        store = IdentityStore(backend.monitor)
+        store.require(store.authenticate(request), "admin")
+        result = backend.monitor.get_settings()
+        return {"version": result["version"], "clocks": result["settings"].get("default_clocks", DEFAULT_CLOCKS)}
+
+    @app.put("/administration/defaults", include_in_schema=False)
+    def save_defaults(request: Request, body: ClockDefaults):
+        store = IdentityStore(backend.monitor)
+        store.require(store.authenticate(request), "admin")
+        store.same_origin(request)
+        clocks = [{"zone": zone, "name": zone.split("/")[-1].replace("_", " ")} for zone in body.clocks]
+        result = backend.monitor.save_settings(body.version, {"default_clocks": clocks})
+        if result is None:
+            raise HTTPException(409, "Defaults changed. Reload and retry.")
+        return {"version": result["version"], "clocks": clocks}
+
     @app.get("/administration/services", include_in_schema=False)
     def inventory(request: Request):
         store = IdentityStore(backend.monitor)

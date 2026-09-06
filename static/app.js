@@ -876,15 +876,6 @@ function buildClocks() {
                     card.querySelector(".clock-zone").prepend(flag);
                 }
 
-                const remove = document.createElement("button");
-                remove.type="button"; remove.className="clock-remove";
-                remove.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6L18 18M18 6L6 18"/></svg>';
-                remove.setAttribute("aria-label", "Remove "+item.name+" clock");
-                remove.addEventListener("click", async () => {
-                    remove.disabled=true;
-                    try {await saveSharedSettings({clocks:TIMEZONES.filter(c=>c.zone!==item.zone)});}
-                    catch(error){document.getElementById("clock-feedback").textContent=error.message;remove.disabled=false;}
-                });
                 const offset=document.createElement("div"); offset.className="clock-offset";
                 offset.dataset.offsetZone=item.zone; card.append(offset);
                 if(settings.clock_backgrounds)queueMicrotask(()=>loadCityBackground(card,item));
@@ -892,6 +883,7 @@ function buildClocks() {
             }
         )
     );
+    configureClockControls(container,TIMEZONES,sharedVersion,applySharedSettings,loadSharedSettings,systemDefaultClocks);
 }
 
 

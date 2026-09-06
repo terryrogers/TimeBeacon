@@ -34,7 +34,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 # ---------------------------------------------------------------------------
 
 BASE_DIR = Path(__file__).resolve().parent
-ASSET_VERSION = hashlib.sha256(b"".join((BASE_DIR / name).read_bytes() for name in ("static/app.js", "static/dashboard.js", "static/app.css", "static/access.js", "static/theme.css", "static/pages.js", "static/clock-picker.js", "static/client-colours.js", "static/timezones.json", "static/service-picker.js", "static/key-clipboard.js", "static/photo-editor.js"))).hexdigest()[:12]
+ASSET_VERSION = hashlib.sha256(b"".join((BASE_DIR / name).read_bytes() for name in ("static/app.js", "static/dashboard.js", "static/app.css", "static/access.js", "static/theme.css", "static/pages.js", "static/clock-picker.js", "static/client-colours.js", "static/timezones.json", "static/service-picker.js", "static/key-clipboard.js", "static/photo-editor.js", "static/clock-controls.js"))).hexdigest()[:12]
 
 CHRONYC = "/usr/bin/chronyc"
 
@@ -601,6 +601,7 @@ install_avatars(app, sys.modules[__name__])
 @app.get('/admin/users', include_in_schema=False)
 @app.get('/admin/roles', include_in_schema=False)
 @app.get('/admin/services', include_in_schema=False)
+@app.get('/admin/defaults', include_in_schema=False)
 @app.get('/admin/clients', include_in_schema=False)
 @app.get('/user-settings', include_in_schema=False)
 def account_page(request: Request):

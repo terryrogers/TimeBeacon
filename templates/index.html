@@ -200,11 +200,11 @@
 <summary>
 <h2>
       World Clocks
-     </h2><a class="world-manage ui button" href="/user-settings#user-clocks">Manage</a>
+     </h2><button class="ui button clock-reset" id="reset-clocks" type="button" title="Replace Your Clocks With the Six Administration Defaults" hidden>Reset Clocks</button><a class="world-manage ui button" href="/user-settings#user-clocks">Manage</a>
 </summary>
 
 
-<div class="clock-grid" id="clocks">
+<p id="clock-feedback" role="status" aria-live="polite"></p><div class="clock-grid" id="clocks">
 </div>
 </details>
 <details class="section panel ui segment" id="clients-panel">
@@ -302,6 +302,7 @@
 
 </div><div class="window-statusbar"><span id="history-gap"></span><span id="history-count">0 samples</span></div></dialog>
 <script src="/static/client-colours.js?v={{ asset_version }}"></script><script src="/static/access.js?v={{ asset_version }}"></script>
+<script src="/static/clock-controls.js?v={{ asset_version }}"></script>
 <script src="/static/app.js?v={{ asset_version }}">
 </script>
 <script src="/static/dashboard.js?v={{ asset_version }}">
