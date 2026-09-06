@@ -1,9 +1,8 @@
 "use strict";
 let currentUser=null, administrationState=null;
 const can=permission=>Boolean(currentUser?.permissions.includes(permission));
-async function accessRequest(url,method="GET",body) {
-    const response=await fetch(url,{method,cache:"no-store",headers:body?{"Content-Type":"application/json"}:{},body:body?JSON.stringify(body):undefined});
-    const payload=await response.json();
+async function accessRequest(url,method="GET",body,view) {
+    const {response,payload}=await requestData(url,{method,cache:"no-store",headers:body?{"Content-Type":"application/json"}:{},body:body?JSON.stringify(body):undefined},view);
     if(!response.ok) {if(response.status===401 && currentUser && url!=="/auth/login")location.replace("/login");throw new Error(typeof payload.detail==="string"?payload.detail:"Request could not be completed. Check the entered values.");}
     return payload;
 }

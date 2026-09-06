@@ -3,7 +3,7 @@ function initialisePhotoEditor({getProfile=()=>personalProfile,endpoint=()=>'/us
     let busy=false;
     function sync(){const profile=getProfile();gravatar.checked=profile.gravatar_enabled;clear.hidden=!profile.custom_photo;document.getElementById('photo-preview').src=profile.avatar;}
     document.getElementById('edit-photo').onclick=()=>{sync();file.value='';message.textContent='';dialog.showModal();};
-    async function update(action){if(busy)return;const target=getProfile();busy=true;for(const control of [gravatar,clear,file])control.disabled=true;try{await onUpdate(await action(),target);sync();message.textContent='Profile photo updated.';}catch(error){sync();message.textContent=error.message;}finally{busy=false;for(const control of [gravatar,clear,file])control.disabled=false;}}
+    async function update(action){if(busy)return;const target=getProfile();busy=true;const finish=beginLoading({target:dialog.querySelector('.window-content'),label:'Updating Photo…'});for(const control of [gravatar,clear,file])control.disabled=true;try{await onUpdate(await action(),target);sync();message.textContent='Profile photo updated.';}catch(error){sync();message.textContent=error.message;}finally{finish();busy=false;for(const control of [gravatar,clear,file])control.disabled=false;}}
     gravatar.onchange=()=>update(()=>accessRequest(endpoint(),'PATCH',{gravatar_enabled:gravatar.checked}));
     clear.onclick=()=>update(()=>accessRequest(endpoint(),'PATCH',{gravatar_enabled:gravatar.checked,clear:true}));
     file.onchange=()=>{const image=file.files[0];if(!image)return;if(image.size>4*1024*1024){message.textContent='Choose an image smaller than 4 MB.';file.value='';return;}const url=endpoint();

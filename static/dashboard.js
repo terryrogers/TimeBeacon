@@ -1,8 +1,8 @@
 "use strict";
 async function fetchJson(url) {
-    const response = await fetch(url, {cache:"no-store", signal:AbortSignal.timeout(15000)});
+    const {response,payload} = await requestData(url, {cache:"no-store", signal:AbortSignal.timeout(15000)});
     if (!response.ok) throw new Error("Server data unavailable");
-    return response.json();
+    return payload;
 }
 let refreshing = false;
 async function refreshServer() {
@@ -98,7 +98,7 @@ async function showGraph(key, reset=true) {
     const dialog=document.getElementById("history-dialog"), graph=document.getElementById("history-graph");
     const message=document.getElementById("history-message"), [label,unit]=GRAPH_METRICS[key];
     document.getElementById("history-title").textContent="Historic "+(key==="cpu" ? "CPU Usage" : label);
-    graph.replaceChildren(); document.getElementById("history-details").replaceChildren(); message.textContent="Loading history…";document.getElementById("history-gap").textContent="";document.getElementById("history-count").textContent="0 samples";
+    graph.replaceChildren(); document.getElementById("history-details").replaceChildren(); message.textContent="";document.getElementById("history-gap").textContent="";document.getElementById("history-count").textContent="0 samples";
     if(!dialog.open) dialog.showModal();
     try {
         const payload=await fetchJson(`/dashboard/history?metric=${encodeURIComponent(key)}&start=${graphStart}&end=${graphEnd}`),end=graphEnd,start=graphStart;
@@ -251,7 +251,7 @@ async function loadSharedSettings() {
 }
 async function saveSharedSettings(changes,version=sharedVersion) {
     if(!version)throw new Error("Shared settings have not loaded. Reload and try again.");
-    const response=await fetch("/dashboard/settings",{method:"PATCH",headers:{"Content-Type":"application/json","X-Dashboard-Settings":"1"},body:JSON.stringify({version,...changes}),signal:AbortSignal.timeout(15000)});
+    const {response,payload}=await requestData("/dashboard/settings",{method:"PATCH",headers:{"Content-Type":"application/json","X-Dashboard-Settings":"1"},body:JSON.stringify({version,...changes}),signal:AbortSignal.timeout(15000)});
     if(!response.ok) {if(response.status===409) {await loadSharedSettings();throw new Error("Settings changed in another browser. Review and save again.");}throw new Error("Settings could not be saved. Please try again.");}
-    applySharedSettings(await response.json());
+    applySharedSettings(payload);
 }

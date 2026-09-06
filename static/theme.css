@@ -83,3 +83,14 @@ dialog.ui.modal.window{height:fit-content}.history-controls{min-width:100%;width
 #manual-theme .ui.toggle.checkbox label { color:var(--text)!important; }
 #daylight-display{position:relative;isolation:isolate}#daylight-display>:not(.daylight-photo){position:relative;z-index:1}#daylight-display .daylight-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.10;pointer-events:none;z-index:0;border-radius:16px}html[data-theme=dark] #daylight-display .daylight-photo{opacity:.13}#daylight-display .reference-photo-button{position:absolute;bottom:10px;right:10px;padding:0;width:24px;height:24px;display:grid;place-items:center;background:transparent;color:var(--muted)}#reference-clock>.flag{margin-right:.6rem}
 #daylight-display>.location-controls{z-index:3}
+
+/* Native dropdowns must fit their line box plus padding (Semantic defaults to 38px). */
+.ui.form select:not([multiple]),select.ui.dropdown:not([multiple]){height:auto;min-height:48px;line-height:1.5;padding:.625rem .75rem;vertical-align:middle}
+.loading-status{display:flex;align-items:center;gap:.65rem;width:fit-content;max-width:100%;padding:.6rem .8rem;margin:0 0 .75rem;border:1px solid var(--border);border-radius:8px;background:var(--panel-alt);color:var(--text);font-size:.85rem;line-height:1.4;position:relative;z-index:4;pointer-events:none}
+.loading-status.loading-dock{position:fixed;bottom:1rem;right:1rem;margin:0;z-index:1000;box-shadow:var(--shadow)}
+.window-content>.loading-status{position:sticky;top:0;z-index:20}
+.loading-status .ui.loader{flex:none;margin:0;color:var(--text)}
+.loading-status .ui.loader:before{border-color:var(--border)}
+.loading-status .ui.loader:after{border-top-color:var(--accent)}
+.clock-card>.loading-status{position:absolute;bottom:1.8rem;left:.5rem;right:.5rem;margin:0;font-size:.7rem}
+@media(prefers-reduced-motion:reduce){.loading-status .ui.loader:after{animation-duration:2s}}

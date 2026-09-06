@@ -1,5 +1,11 @@
 # Changelog
 
+## Dashboard 5.9.2 / API 4.1.0 — 6 September 2026
+
+- Correct native dropdown height and text alignment to prevent clipped descenders.
+- Add delayed, theme-aware Semantic UI loaders for slow page/data loading, graphs, forms, service actions, location searches/detection, clocks, photographs and account/API-key operations.
+- Keep content and modal close controls usable while loading, and clear indicators after success, failure or timeout.
+
 ## Dashboard 5.9.1 / API 4.1.0 — 6 September 2026
 
 - Default new-account setup to Email Temporary Setup Link. Set Password Now remains available; existing account editing is unchanged.

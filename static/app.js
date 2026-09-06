@@ -657,8 +657,8 @@ function setServerStatus(
 
 async function refreshTracking() {
 
-    const response =
-        await fetch(
+    const {payload} =
+        await requestData(
             "/dashboard/tracking",
             {
                 cache:
@@ -666,8 +666,6 @@ async function refreshTracking() {
             }
         );
 
-    const payload =
-        await response.json();
 
     if (
         payload.status !== "ok"
@@ -718,8 +716,8 @@ async function refreshTracking() {
 
 async function refreshClients() {
 
-    const response =
-        await fetch(
+    const {payload} =
+        await requestData(
             "/dashboard/clients",
             {
                 cache:
@@ -727,8 +725,6 @@ async function refreshClients() {
             }
         );
 
-    const payload =
-        await response.json();
 
     if (
         payload.status !== "ok"
@@ -761,8 +757,8 @@ async function refreshClients() {
 
 async function synchroniseNtpClock() {
 
-    const response =
-        await fetch(
+    const {payload} =
+        await requestData(
             "/dashboard/time",
             {
                 cache:
@@ -770,8 +766,6 @@ async function synchroniseNtpClock() {
             }
         );
 
-    const payload =
-        await response.json();
 
     if (
         payload.status !== "ok"
@@ -889,11 +883,11 @@ function buildClocks() {
 
 async function loadCityBackground(card,item) {
     try {
-        const {image:photo}=await accessRequest("/dashboard/clocks/image?zone="+encodeURIComponent(item.zone));
+        const {image:photo}=await accessRequest("/dashboard/clocks/image?zone="+encodeURIComponent(item.zone),"GET",undefined,{target:card,label:"Loading Photo…"});
         if(!photo || !card.isConnected || !settings.clock_backgrounds)return;
         const image=document.createElement("img");image.className="clock-city-background";image.alt="";image.setAttribute("aria-hidden","true");image.loading="lazy";image.referrerPolicy="no-referrer";
         const credit=uiButton("ⓘ",()=>showCityPhotoCredit(photo));credit.className="ui icon button clock-photo-credit";credit.setAttribute("aria-label","Photo Credit for "+item.name);credit.title="Photo Credit";credit.hidden=true;
-        image.onload=()=>{credit.hidden=false;};image.onerror=()=>{image.remove();credit.remove();};image.src=photo.image_url;card.prepend(image);card.append(credit);
+        image.onload=()=>{credit.hidden=false;};image.onerror=()=>{image.remove();credit.remove();};trackLoadingImage(image,card);image.src=photo.image_url;card.prepend(image);card.append(credit);
     } catch { /* Photos are optional; clocks remain usable when imagery is unavailable. */ }
 }
 function showCityPhotoCredit(photo) {
