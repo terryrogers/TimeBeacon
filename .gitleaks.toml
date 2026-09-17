@@ -1,0 +1,60 @@
+title = "Repository Secret Checks"
+minVersion = "v8.30.0"
+
+[extend]
+path = "security/gitleaks-portable.toml"
+
+# Add only narrowly reviewed project exceptions below. Bind each exception to
+# one exact synthetic value and one exact file. Never allowlist real secrets or
+# private publication identifiers.
+
+[[rules]]
+id = "portable-connection-string-password"
+[[rules.allowlists]]
+description = "Allow reviewed password variable expressions or synthetic values only in auth_flows.py."
+condition = "AND"
+paths = ["^auth_flows\\.py$"]
+regexTarget = "secret"
+regexes = ["^\\?,require_password_change=0$"]
+[[rules.allowlists]]
+description = "Allow reviewed password variable expressions or synthetic values only in mail_delivery.py."
+condition = "AND"
+paths = ["^mail_delivery\\.py$"]
+regexTarget = "secret"
+regexes = ["^IdentityStore\\(monitor\\)\\.cipher\\(\\)\\.decrypt\\(config\\[$"]
+[[rules.allowlists]]
+description = "Allow reviewed password variable expressions or synthetic values only in static/auth-ui.js."
+condition = "AND"
+paths = ["^static/auth-ui\\.js$"]
+regexTarget = "secret"
+regexes = ["^form\\.elements\\.new_password\\.value$", "^form\\.elements\\.required_password\\.value$"]
+[[rules.allowlists]]
+description = "Allow reviewed password variable expressions or synthetic values only in tests/test_accounts.py."
+condition = "AND"
+paths = ["^tests/test_accounts\\.py$"]
+regexTarget = "secret"
+regexes = ["^viewer-password$"]
+[[rules.allowlists]]
+description = "Allow reviewed password variable expressions or synthetic values only in tests/test_admin_refinements.py."
+condition = "AND"
+paths = ["^tests/test_admin_refinements\\.py$"]
+regexTarget = "secret"
+regexes = ["^test-password$"]
+[[rules.allowlists]]
+description = "Allow reviewed password variable expressions or synthetic values only in tests/test_city_images.py."
+condition = "AND"
+paths = ["^tests/test_city_images\\.py$"]
+regexTarget = "secret"
+regexes = ["^viewer-password$"]
+[[rules.allowlists]]
+description = "Allow reviewed password variable expressions or synthetic values only in tests/test_client_settings.py."
+condition = "AND"
+paths = ["^tests/test_client_settings\\.py$"]
+regexTarget = "secret"
+regexes = ["^viewer-password$"]
+[[rules.allowlists]]
+description = "Allow reviewed password variable expressions or synthetic values only in tests/test_service_repairs.py."
+condition = "AND"
+paths = ["^tests/test_service_repairs\\.py$"]
+regexTarget = "secret"
+regexes = ["^viewer-password$"]

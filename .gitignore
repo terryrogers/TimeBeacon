@@ -14,3 +14,5 @@ source-manifest.json
 *.sqlite3*
 *.zip
 *.tar.gz
+
+/.tools/

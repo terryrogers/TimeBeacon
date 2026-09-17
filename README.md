@@ -2,7 +2,7 @@
 
 Precision-time monitoring for Linux NTP/Chrony servers: system metrics, service health, GPS/PPS reception, time acquisition, time clients and personal world clocks.
 
-Dashboard **5.9.4** · API **4.1.0** · Copyright (c) 2026 TimeBeacon Contributors · MIT License.
+Dashboard **5.9.5** · API **4.1.0** · Copyright (c) 2026 TimeBeacon Contributors · MIT License.
 
 ## Setup
 
@@ -76,4 +76,4 @@ Administrators can select **Details → Fix** beside a degraded monitored servic
 
 **Settings → My World Clocks → Show City Backgrounds** controls optional photographs for that account (enabled by default). Metadata comes from Wikipedia and Wikimedia Commons and is cached in SQLite for seven days; unavailable results are cached for six hours. When a clock is added in Settings with backgrounds enabled, its photo metadata is fetched into the shared server cache and the image is preloaded into the current browser cache before the ready message. Browser images load directly from Wikimedia with no referrer; returning to the dashboard reuses the cached image when available. Image failures do not prevent adding a clock. Only attributed freely licensed images are displayed, with an on-tile photo-credit control; the application's MIT license does not replace each photo's license. UTC and cities without a suitable photograph retain plain tiles.
 
-Run `python -m pytest -q`. Tests require pytest, Playwright with Edge, httpx and runtime dependencies. Version constants are in version.py; changes are recorded in CHANGELOG.md. Source control excludes databases, credentials, local deployment records and generated test evidence. Local tests, deployed service checks and user acceptance are separate verification stages.
+Install the test environment with `python -m pip install -r requirements.txt -r requirements-dev.txt`, then run `python -m pytest -q`. Browser tests use Playwright with Edge in headless mode. Version constants are in version.py; changes are recorded in CHANGELOG.md. Source control excludes databases, credentials, local deployment records and generated test evidence. Local tests, deployed service checks and user acceptance are separate verification stages.

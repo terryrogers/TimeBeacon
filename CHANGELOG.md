@@ -1,5 +1,10 @@
 # Changelog
 
+## Dashboard 5.9.5 / API 4.1.0 — 17 September 2026
+
+- Add modular repository quality gates for secret scanning, Python, and documentation.
+- Add verified local pre-commit and pre-push secret checks using portable and private publication-safety policies.
+
 ## Dashboard 5.9.4 / API 4.1.0 — 6 September 2026
 
 - Place an icon-only city/town search spinner inside the dropdown, immediately left of its arrow, without loading text.
