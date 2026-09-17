@@ -45,8 +45,9 @@ def test_cached_country_search_and_visible_loaders(system):
         delay['path']=None;fulfill(held.pop())
         expect(page.locator('#location-search-loading')).to_be_hidden()
         assert len(country_calls)==1 and 'code=gb' in country_calls[0]
+        picker=page.locator('#location-picker')
         search=page.get_by_role('textbox',name='Search Cities and Towns')
-        search.click()
+        picker.click()
         expect(page.locator('#location-picker .menu .item').filter(has_text='London').first).to_be_visible()
 
         delay['path']='/user/locations/search?'
@@ -71,7 +72,7 @@ def test_cached_country_search_and_visible_loaders(system):
         expect(page.locator('#location-search-loading')).to_be_hidden()
         delay['path']=None
         page.reload();expect(page.locator('#get-location')).to_be_enabled()
-        search.click();expect(page.locator('#location-picker .menu .item').filter(has_text='London').first).to_be_visible()
+        picker.click();expect(page.locator('#location-picker .menu .item').filter(has_text='London').first).to_be_visible()
         assert len(country_calls)==1
 
         search.fill('Tokyo Japan')
@@ -80,7 +81,7 @@ def test_cached_country_search_and_visible_loaders(system):
         expect(page.locator('#location-label')).to_contain_text('Tokyo')
         expect(page.locator('#location-search-loading')).to_be_hidden()
         assert any('code=jp' in url for url in country_calls)
-        search.click()
+        picker.click()
         expect(page.locator('#location-picker .menu .item').first.locator('i.jp.flag')).to_have_count(1)
         page.locator('#clear-location').click()
         expect(page.locator('#manual-theme')).to_be_visible()
