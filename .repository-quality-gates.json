@@ -1,7 +1,8 @@
 {
   "schemaVersion": 1,
-  "templateVersion": "0.1.0-dev",
+  "templateVersion": "0.1.0",
   "modules": [
+    "powershell",
     "node",
     "documentation"
   ],
@@ -19,6 +20,11 @@
       "path": ".github/workflows/quality-node.yml",
       "module": "node",
       "sha256": "d06aaa8ef6e78d10d33d72802772d590b9ea137200693d9b69db6fd53d8a7463"
+    },
+    {
+      "path": ".github/workflows/quality-powershell.yml",
+      "module": "powershell",
+      "sha256": "a21235f8a464b09cfcbed5521d3662924ebc84748842a55df3ab2e808e49bb70"
     }
   ],
   "gitIgnoreLines": []
