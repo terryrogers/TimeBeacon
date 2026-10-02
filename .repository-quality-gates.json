@@ -6,9 +6,12 @@
     "licensing",
     "module-drift",
     "node",
+    "powershell",
     "secret-scanning"
   ],
-  "preservedModules": [],
+  "preservedModules": [
+    "python"
+  ],
   "files": [
     {
       "path": ".githooks/pre-commit",
@@ -39,6 +42,11 @@
       "path": ".github/workflows/quality-node.yml",
       "module": "node",
       "sha256": "3ef46f5be8b916ee827fa2080c8b3da18a81f0d1842694d1e055e7e756583ab6"
+    },
+    {
+      "path": ".github/workflows/quality-powershell.yml",
+      "module": "powershell",
+      "sha256": "9b55919acd73af868171fa42e8ec74cf704a7ecb8b6d48491e00c55b15113c48"
     },
     {
       "path": ".github/workflows/secret-scanning.yml",

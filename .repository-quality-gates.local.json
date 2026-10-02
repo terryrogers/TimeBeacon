@@ -1,9 +1,16 @@
 {
   "schemaVersion": 1,
+  "modules": {
+    "include": [
+      "powershell"
+    ],
+    "repositoryOwned": [
+      "python"
+    ]
+  },
   "paths": {
     "repositoryOwned": [
-      ".gitleaks.toml",
-      ".github/workflows/quality-python.yml"
+      ".gitleaks.toml"
     ]
   }
 }

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Register the customized Python workflow as repository-owned & retain the required PowerShell quality check during reconciliation.
+
 - Refresh repository quality gates, add the approved licence decision metadata, & enforce managed-module drift checks. Preserve the Edge browser test setup & narrowly scoped secret-scan exceptions as repository-owned configuration.
 
 ## Dashboard 5.9.5 / API 4.1.0 — 17 September 2026
