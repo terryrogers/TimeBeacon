@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "paths": {
+    "repositoryOwned": [
+      ".gitleaks.toml",
+      ".github/workflows/quality-python.yml"
+    ]
+  }
+}
